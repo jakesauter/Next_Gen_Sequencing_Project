@@ -1,0 +1,97 @@
+---
+title: "First-Steps: Processing Project Data"
+author: "Jake Sauter"
+date: "2/17/2021"
+output: 
+  html_document: 
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+
+
+
+Download at least one FASTQ file that you will be working with for your project. Document the following details: (2pt)
+    
+  * where did you get it from?
+  * what publication is it linked to?
+  * who generated the data?
+  * how was the NA extracted?
+  * what library prep was used?
+  * what cell type was used?
+  * what was the treatment/experimental condition?
+  * what sequencing platform was used?
+    
+Align the FASTQ file with an appropriate aligner (you may have to build a new index). Document: (3pt)
+    
+  * parameters (and why you chose them)
+  * summary of outcome and basic QC
+  
+## **Downloading the Fastq Files**
+
+* Navigate to: 
+    https://www.ncbi.nlm.nih.gov/Traces/study/?page=3&acc=PRJNA515044&o=diagnosis_sam_s%3Ad%3Bacc_s%3Aa
+
+* Download "metadata" file
+* Run the code below to download
+
+
+```{bash}
+myeloid_acc_nums=$(cat Sra_run_table.txt | grep myeloid | cut -d',' -f1)
+
+for acc_num in $myeloid_acc_nums ; do 
+    fasterq-dump --outdir myeloid_cells $acc_num
+done
+```
+
+* Download the human reference genome
+
+```{bash}
+wget ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/chromFa.tar.gz'
+```
+
+
+* Download human reference annotation of genes 
+
+```{bash}
+wget ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gtf.gz
+```
+
+
+* Generate the reference
+
+```{bash}
+STAR --runMode  genomeGenerate \
+     --runThreadN 16 \
+     --genomeDir human_genome_38_STAR_index \
+     --genomeFastaFiles human_genome_38/hg38.fa \
+     --sjdbGTFfile human_genome_38/gencode.v36.annotation.gtf \
+     --sjdbOverhang 49 
+```
+
+* Run STAR on a file with the reference
+
+Notice the use of `--outSAMattributes All` below, this will add the 
+following attributes to our output
+  
+  * attr 1
+  * attr 2
+
+```{bash}
+STAR --runMode  alignReads \
+     --runThreadN 16 \
+     --genomeDir  human_genome_38_STAR_index \
+     --readFilesIn  /home/t730/Documents/Weill_Cornell/ANGSD/project_data/myeloid_cells/SRR8440443.fastq.gz \
+     --readFilesCommand  zcat \
+     --outFileNamePrefix  alignments/SRR8440443. \
+     --outSAMtype  BAM  SortedByCoordinate \
+     --outSAMattributes All
+```
+
+
+
+
+samtools view 
