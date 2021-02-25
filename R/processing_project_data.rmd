@@ -169,7 +169,7 @@ Overall sequence quality of the sequenced libraries appears to be very
 high when view the **Per Base Sequence Quality** score in the resultant
 `multiqc_report.html`. 
 
-![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/fastqc_per_base_sequence_quality_plot.png)
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/fastqc_per_base_sequence_quality_plot.png){}
 
 ### **Over-Represented Sequences**
 
@@ -326,11 +326,7 @@ We see that two of these sample are from male control samples,
 while one is a female AD sample, so this issue is not contained
 to one experimental group.
 
-![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/per_base_seq_content_fail.png)
-
-
-
-
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/per_base_seq_content_fail.png){width=50%}
 
 ### **Per Sequence GC Content**
 
@@ -744,9 +740,32 @@ for bam_file in $bam_files; do
   base=$(basename $bam_file)
   prefix=$(echo $base | egrep -o "SRR[0-9]+")
   
-  
+  num_lines=$(cat ${prefix}_trimmed.Unmapped.out.mate1 | wc -l)
+  num_total_lines=$(zcat ../trimmed_myeloid_cells/${prefix}_trimmed.fq.gz | wc -l)
+  perc_unmapped_reads=$(echo -e "(${num_lines}/${num_total_lines})*100" | bc -l | xargs printf %.2f)
+  echo -e "Percentage of unmapped reads for ${prefix}: ${perc_unmapped_reads}%"
 done 
 ```
+
+```{bash}
+Percentage of unmapped reads for SRR8440443: 5.90%
+Percentage of unmapped reads for SRR8440448: 4.04%
+Percentage of unmapped reads for SRR8440463: 33.79%
+Percentage of unmapped reads for SRR8440477: 5.14%
+Percentage of unmapped reads for SRR8440482: 6.54%
+Percentage of unmapped reads for SRR8440501: 6.98%
+Percentage of unmapped reads for SRR8440511: 5.47%
+Percentage of unmapped reads for SRR8440514: 4.97%
+Percentage of unmapped reads for SRR8440518: 5.02%
+Percentage of unmapped reads for SRR8440524: 11.28%
+Percentage of unmapped reads for SRR8440538: 7.43%
+Percentage of unmapped reads for SRR8440539: 12.34%
+```
+
+We see that sample `SRR8440463` showed a very high amount of unmapped reads. 
+This is the same sample that showed issues in the **Per Sequence GC Content**
+plot before, thus providing us more evident that this sample should be considered
+for not being included in the study. 
 
 
 
