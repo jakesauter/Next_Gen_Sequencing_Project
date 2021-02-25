@@ -1,0 +1,48 @@
+==> SRR8440443.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	1057821 (2.3%)
+
+
+==> SRR8440448.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	665878 (1.5%)
+
+
+==> SRR8440463.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	376460 (0.9%)
+
+
+==> SRR8440477.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	505432 (1.2%)
+
+
+==> SRR8440482.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	342927 (0.9%)
+
+
+==> SRR8440501.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	543622 (1.3%)
+
+
+==> SRR8440511.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	335662 (0.8%)
+
+
+==> SRR8440514.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	548912 (1.2%)
+
+
+==> SRR8440518.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	661776 (1.5%)
+
+
+==> SRR8440524.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	591055 (1.5%)
+
+
+==> SRR8440538.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	1170235 (1.1%)
+
+
+==> SRR8440539.fastq.gz_trimming_report.txt <==
+Sequences removed because they became shorter than the length cutoff of 20 bp:	243505 (0.7%)
+
+
