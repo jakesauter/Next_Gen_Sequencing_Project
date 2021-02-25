@@ -1,6 +1,16 @@
-# **First-Steps: Processing Project Data**
+---
+title: "First-Steps: Processing Project Data"
 author: "Jake Sauter"
 date: "2/17/2021"
+output: 
+  html_document: 
+    toc: true
+    keep_md: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
 
 
 ## **Context of Project FastQ Files**
@@ -19,7 +29,7 @@ as well as [NCBI GEO](https://www.ncbi.nlm.nih.gov//geo/query/acc.cgi?acc=GSE125
 
 > <font size=2.5> For whole tissue RNA studies (GSE125583), frozen tissue was sectioned in approximately 8 slices 40mm thick and stored at 80 degrees C. Tissue was homogenized in 1 mL QIAzol with 5 mm stainless steel beads using a Tissuelyzer (20 Hz for 4 min). After homogenization,200mL of choloroform were added to the cleared lysate (1 min at 12,000 rcf.at 4 degrees C), vigorously shook and incubated at room tem-perature 2-3 min. Samples were centrifuged for 15 min at 12,000 rcf.at 4 degrees C and the upper aqueous phase was transferred to a newtube. **RNA was extracted using QIAGEN miRNeasy mini columns**, yielding samples with RNA integrity (RIN) scores averaging 6.5. </font>
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/rna_extraction_step.png)
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/rna_extraction_step.png)
 
 **What library prep was used?**: 
 
@@ -203,7 +213,7 @@ Overall sequence quality of the sequenced libraries appears to be very
 high when view the **Per Base Sequence Quality** score in the resultant
 `multiqc_report.html`. 
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/fastqc_per_base_sequence_quality_plot.png){width=50%}
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/fastqc_per_base_sequence_quality_plot.png){}
 
 ### **Over-Represented Sequences**
 
@@ -215,7 +225,7 @@ about this. For this exercise I have chosen to view `SRR8440524_fastqc.html`,
 which shows us below that we may have some Illumina TruSeq Adapter 
 dimerization contamination. 
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/overp_seqs.png)
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/overp_seqs.png)
 
 ### **TrimGalore**
 
@@ -259,7 +269,7 @@ Below we can see that `TrimGalore` did not remove too many
 sequences from any one file, with the largest amount of sequences
 being **2.3%**, coming from sample **SRR8440443**
 
-![](R/processing_project_data_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](processing_project_data_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 **Code for above plot**
 
@@ -306,7 +316,7 @@ length distribution has not been devastated after the use of `TrimGalore`,
 which should give us some trust that it has not removed large chunks 
 from too many sequences.
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/post_trim_seq_len_dist.png){width=50%}
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/post_trim_seq_len_dist.png){width=50%}
 
 
 ### **Per Base Sequence Content**
@@ -335,7 +345,7 @@ We see that two of these sample are from male control samples,
 while one is a female AD sample, so this issue is not contained
 to one experimental group.
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/per_base_seq_content_fail.png){width=50%}
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/per_base_seq_content_fail.png){width=50%}
 
 ### **Per Sequence GC Content**
 
@@ -346,14 +356,14 @@ appears to have a skewed per sequence gc content distribution. We note
 that this sample is `SRR8440463`, and will keep an eye on this
 sample. 
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/per_seq_gc_content.png)
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/per_seq_gc_content.png)
 
 We also see that this same sample has the highest percentage of **duplicate reads**, 
 leading us to believe more that this sample might be contaminated by other
 sequences that do not model the GC content of the target genome. **We note that
 this sample was not of concern earlier when studying the cyclic pattern per base sequence content list**.
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/multi_qc_trimmed_gen_stats.png)
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/multi_qc_trimmed_gen_stats.png)
 
 
 ```r
@@ -753,7 +763,7 @@ the terminal. The **first two** histograms are shown below.
 samtools coverage --histogram SRR8440443_trimmed.Aligned.sortedByCoord.out.bam 
 ```
 
-![](https://raw.githubusercontent.com/jakesauter/Next_Gen_Sequencing_Project/main/imgs/samtools_coverage_example.png)
+![](/home/x1/Documents/Weill_Cornell/ANGSD/angsd_project/imgs/samtools_coverage_example.png)
 
 ### **Calculating Unmapped Reads**
 

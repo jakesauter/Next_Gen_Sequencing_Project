@@ -5,6 +5,7 @@ date: "2/17/2021"
 output: 
   html_document: 
     toc: true
+    keep_md: true
 editor_options: 
   chunk_output_type: console
 ---
