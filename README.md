@@ -1,6 +1,6 @@
 ## **NGS RNA-Seq Project**
 
-**Progress Report: Finish Aligning and Generate Read Counts </font>"**
+**Progress Report: Finish Aligning and Generate Read Counts**
 
 A report by: **Jake Sauter**
 
