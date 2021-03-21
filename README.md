@@ -378,7 +378,7 @@ colSums(counts(DESeq.ds)) %>%
   theme(axis.text.x = element_text(angle=-35))
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 Moving forward, we will filter our `DESeqDataSet` as to only include genes that have a read mapped for at least one sample.
 
@@ -411,7 +411,7 @@ plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)),
      ylab = 'library sizes', xlab = 'size factors', cex = 0.6)
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 Assumptions:
 
@@ -430,7 +430,7 @@ boxplot(log2(counts(DESeq.ds)+1), notch=TRUE,main = "Non-normalized read counts"
 boxplot(log2(counts(DESeq.ds, normalize= TRUE)+1), notch=TRUE,main = "Size-factor-normalized read counts",ylab="log2(read counts)", cex = .6)
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 
 ```r
@@ -458,7 +458,7 @@ plot(assay(DESeq.rlog)[,'SRR8440518'],
      ylab ='SRR8440529')
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 **Mean vs Stdev before `rlog`**
 
@@ -480,7 +480,7 @@ msd_plot$gg +
   ylab("standard deviation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 **Mean vs Stdev after `rlog`**
 
@@ -500,7 +500,7 @@ msd_plot$gg +
   coord_cartesian(ylim = c(0,3))
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 ### **Male vs Female Correlation Heatmap**
 
@@ -529,7 +529,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 We don't see males and females clustering too closely together here, showing support that sex should not be a confounding factor moving forward.
 
@@ -559,7 +559,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 We can also evaluate the similarity of samples with simple hierarchical clustering:
 
@@ -577,7 +577,7 @@ as.dist(1-rlog_corr_coeff) %>%
        main = "rlog transformed read counts")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
 
 From the heatmap and clustering results above, it does not seem like our patient samples are easily seperable by overall expression profiles. In order to ensure that our conditions truly do show different gene expression profiles, we will only select genes that were found to be differentially expressed between the conditions in the paper. We can convert our `ensemblID` s to Gene-Ontology format through the use of the `biomaRt` Bioconductor package.
 
@@ -659,7 +659,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
 
 
 ```r
@@ -675,7 +675,7 @@ as.dist(1-rlog_corr_coeff) %>%
        main = "rlog transformed read counts")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
 
 Now we see much more distict grouping between our clinical groups, a good sign for differential expression analysis down the line.
 
