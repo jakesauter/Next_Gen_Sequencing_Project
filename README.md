@@ -135,7 +135,7 @@ Signs of cyclic GC content for some runs, are present in the dataset, however fa
 
 Particularly these issues were seen in three of the samples, with the effects occurring with varying degree. These samples were `SRR8440539`, `SRR8440524`, and `SRR8440538`.
 
-![](imgs/per_base_seq_content_fail.png){:width="50%"}
+![](imgs/per_base_seq_content_fail.png)
 
 ### **Calculating Percent Unmapped Reads**
 
