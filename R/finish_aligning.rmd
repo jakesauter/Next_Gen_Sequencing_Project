@@ -1,12 +1,24 @@
-## **NGS RNA-Seq Project**
+---
+title: "NGS RNA-Seq Project\n\n <font size=6> Progress Report: Finish Aligning and Generate Read Counts </font>"
+author: "Jake Sauter"
+date: "3/19/2021"
+output: 
+  html_document: 
+    toc: true
+    toc_float: false
+    keep_md: true
+editor_options: 
+  chunk_output_type: inline
+---
 
-**Progress Report: Finish Aligning and Generate Read Counts </font>"**
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE, 
+                      comment = NA)
+```
 
-A report by: **Jake Sauter**
-
-date: 3/19/2021
-
-### **Background**
+## **Background**
 
 Information the `fastq` files used in this study can be found [here](https://www.ncbi.nlm.nih.gov/Traces/study/?page=3&acc=PRJNA515044&o=diagnosis_sam_s%3Ad%253Bacc_s%3Bacc_s%3Aa) as well as [NCBI GEO](https://www.ncbi.nlm.nih.gov//geo/query/acc.cgi?acc=GSE125050)
 
@@ -14,12 +26,11 @@ Information the `fastq` files used in this study can be found [here](https://www
 
 > <font size=2.5> All subjects had been characterized clinically and neuropathologically by the Arizona Study of Aging and Neurodegenerative Dis-ease/Brain and Body Donation Program (Beach et al., 2015). All AD subjects were clinically diagnosed with AD in life and brains wereneuropathologically confirmed to have ''frequent'' CERAD neuritic plaque densities (Mirra et al., 1991) and Braak score V or VI (Braakand Braak, 1991). Controls did not have dementia, AD or other neurological disease diagnoses in life. </font>
 
-### **Downloading Myeloid/Microglia Data**
+## **Downloading Myeloid/Microglia Data**
 
 For the first iteration, I have chosen to proceed with one of the four available cell types, being **myeloid** / microglia cells. However, the script below can be easily be adapted to download all `cell_types` with a simple `for` loop.
 
-
-```bash
+```{bash, eval=FALSE}
 # I got a 2TB SSD for genomic datasets!
 alzheimers_dataset="/Genomic_Data_Storage/Alzheimers_Project"
 
@@ -44,14 +55,13 @@ for acc_num in "${acc_nums[@]}" ; do
 
 Note that for microglia data specifically, author's have included the following table, found in the `Experimental model and subject details` section of the publication:
 
-![](R/images/paste-A8FC8DC9.png)
+![](images/paste-A8FC8DC9.png)
 
-### **Downloading STAR resources**
+## **Downloading STAR resources**
 
 In order to generate a STAR index for later mapping, we will first need to download the human reference genome, as well as the human reference annotation of genes that is compatible with this version of the human reference genome.
 
-
-```bash
+```{bash, eval=FALSE}
 mkdir human_genome_38
 cd human_genome_38
 wget ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
@@ -61,8 +71,7 @@ gunzip *
 
 Now that we have both the reference genome and our features of interest, we can generate our `STAR` index using the command below, saving our index to the `--genomeDir` directory of `human_genome_38_STAR_index`.
 
-
-```bash
+```{bash, eval=FALSE}
 STAR --runMode  genomeGenerate \
      --runThreadN 16 \
      --genomeDir human_genome_38_STAR_index \
@@ -71,14 +80,13 @@ STAR --runMode  genomeGenerate \
      --sjdbOverhang 49 
 ```
 
-### **TrimGalore short read trimming --\> FastQC --\> STAR**
+## **TrimGalore short read trimming --\> FastQC --\> STAR**
 
 Adapter sequences were found to be present during initial studies of this dataset, so it is best to use `trim_galore` in order to remove these sequences first.
 
 In the script below, once all of the files are trimmed and saved, `FastQC` (paired with `multiqc` aggregation) is used to facilitate sequence quality control.**Script for data processing:**
 
-
-```bash
+```{bash, eval=FALSE}
 #!/bin/bash 
 
 trim_galore="/home/t730/TrimGalore/TrimGalore-0.6.6/trim_galore"
@@ -127,7 +135,7 @@ for fastq_file in $trimmed_files; do
 done
 ```
 
-### **QC Issues**
+## **QC Issues**
 
 Signs of cyclic GC content for some runs, are present in the dataset, however fastq tile coordinates **are not available** in the GEO dataset to allow for selective tile filtering.
 
@@ -135,10 +143,9 @@ Signs of cyclic GC content for some runs, are present in the dataset, however fa
 
 Particularly these issues were seen in three of the samples, with the effects occurring with varying degree. These samples were `SRR8440539`, `SRR8440524`, and `SRR8440538`.
 
-### **Calculating Percent Unmapped Reads**
+## **Calculating Percent Unmapped Reads**
 
-
-```bash
+```{bash, eval=FALSE}
 #!/bin/bash
 
 data_storage_dir=/Genomic_Data_Storage/Alzheimers_Project
@@ -167,8 +174,7 @@ done
 cat $parallel_tmp_dir/*.out
 ```
 
-
-```bash
+```{bash, eval=FALSE}
 Percentage of unmapped reads for SRR8440443: 5.90%
 Percentage of unmapped reads for SRR8440447: 4.17%
 Percentage of unmapped reads for SRR8440448: 4.04%
@@ -198,16 +204,15 @@ Percentage of unmapped reads for SRR8440542: 8.16%
 
 From the about output, we see that `SRR8440463` as an unusually high amount of unmapped reads compared to all other samples in the study. When cross-referenceing our previously generated `MultiQC` report from earlier, we can see that the GC content of this sample appears to be off compared to all other samples as well, possibly indicating contamination or other library quality issues.
 
-![](R/images/paste-E644752B.png)
+![](images/paste-E644752B.png)
 
 **Problematic cyclic GC samples from before**: `SRR8440524`, `SRR8440538`, and `SRR8440539` **NOT** `SRR8440463` that we see with GC-rich contamination above.
 
 We will keep these QC issues in mind moving forward, and possibly remove the samples before analysis in `R`
 
-### **Generating FeatureCounts**
+## **Generating FeatureCounts**
 
-
-```bash
+```{bash, eval=FALSE}
 #!/bin/bash
 
 cell_type='myeloid'
@@ -227,12 +232,11 @@ featureCounts \
   -T 14 $bam_files
 ```
 
-### **Forming a DESeq2 object from featureCounts data**
+## **Forming a DESeq2 object from featureCounts data**
 
 Below we will use the `DESeq2` R package to make a `DESeqDataSet` from our resultant files from running featureCounts. At this step, I have chosen to remove our **4** samples with QC issues after preliminary analysis.
 
-
-```r
+```{r}
 library(knitr)
 library(purrr)
 library(dplyr)
@@ -265,21 +269,9 @@ read_counts %>%
   kable()
 ```
 
-
-
-|                  | SRR8440443| SRR8440447| SRR8440448| SRR8440449|
-|:-----------------|----------:|----------:|----------:|----------:|
-|ENSG00000223972.5 |          0|          0|          0|          0|
-|ENSG00000227232.5 |          0|          1|          1|          0|
-|ENSG00000278267.1 |          0|          0|          0|          0|
-|ENSG00000243485.5 |          0|          0|          0|          0|
-|ENSG00000284332.1 |          0|          0|          0|          0|
-|ENSG00000237613.2 |          0|          0|          0|          0|
-
 Now that we have our raw read counts, lets gather information about our samples to supply to the `colData` parameter of `DESeqDataSetFromMatrix`.
 
-
-```r
+```{r}
 accession_table <-
   read.table('../accession_tables/Sra_run_table.txt', 
              header = TRUE, sep = ',', stringsAsFactors = FALSE) %>% 
@@ -293,40 +285,9 @@ accession_table %>%
   kable()
 ```
 
-
-
-|Run        |Diagnosis |sex    |expired_age |Cell_type |
-|:----------|:---------|:------|:-----------|:---------|
-|SRR8440477 |AD        |male   |88          |myeloid   |
-|SRR8440501 |AD        |male   |79          |myeloid   |
-|SRR8440448 |AD        |female |84          |myeloid   |
-|SRR8440484 |AD        |NA     |59          |myeloid   |
-|SRR8440486 |AD        |male   |75          |myeloid   |
-|SRR8440488 |AD        |NA     |81          |myeloid   |
-|SRR8440514 |AD        |female |78          |myeloid   |
-|SRR8440538 |AD        |female |84          |myeloid   |
-|SRR8440542 |AD        |male   |70          |myeloid   |
-|SRR8440463 |AD        |male   |72          |myeloid   |
-|SRR8440511 |Control   |female |59          |myeloid   |
-|SRR8440518 |Control   |female |88          |myeloid   |
-|SRR8440527 |Control   |male   |79          |myeloid   |
-|SRR8440447 |Control   |NA     |73          |myeloid   |
-|SRR8440443 |Control   |female |>90         |myeloid   |
-|SRR8440449 |Control   |male   |74          |myeloid   |
-|SRR8440482 |Control   |male   |>90         |myeloid   |
-|SRR8440513 |Control   |male   |>90         |myeloid   |
-|SRR8440517 |Control   |NA     |58          |myeloid   |
-|SRR8440524 |Control   |male   |86          |myeloid   |
-|SRR8440525 |Control   |male   |86          |myeloid   |
-|SRR8440529 |Control   |female |83          |myeloid   |
-|SRR8440531 |Control   |male   |38          |myeloid   |
-|SRR8440536 |Control   |male   |61          |myeloid   |
-|SRR8440539 |Control   |male   |>90         |myeloid   |
-
 From this accession table, we can map our accession ids to any clinical variable we like, such as `Diagnosis`, which is our main experimental group condition in this analysis. `Diagnosis` in our case tells us whether or not the diseased patient showed signs of Alzheimer's disease or not (control).
 
-
-```r
+```{r}
 conditions <- 
   colnames(read_counts) %>% 
   map(~accession_table[
@@ -352,23 +313,11 @@ DESeq.ds %>%
   kable()
 ```
 
-
-
-|                  | SRR8440443| SRR8440447| SRR8440448| SRR8440449| SRR8440477|
-|:-----------------|----------:|----------:|----------:|----------:|----------:|
-|ENSG00000223972.5 |          0|          0|          0|          0|          0|
-|ENSG00000227232.5 |          0|          1|          1|          0|          0|
-|ENSG00000278267.1 |          0|          0|          0|          0|          0|
-|ENSG00000243485.5 |          0|          0|          0|          0|          0|
-|ENSG00000284332.1 |          0|          0|          0|          0|          0|
-|ENSG00000237613.2 |          0|          0|          0|          0|          0|
-
-### **Read Mapping Quality Assessment**
+## **Read Mapping Quality Assessment**
 
 **Number of reads sequenced per sample**
 
-
-```r
+```{r}
 library(stringr) 
 
 colSums(counts(DESeq.ds)) %>% 
@@ -378,40 +327,24 @@ colSums(counts(DESeq.ds)) %>%
   theme(axis.text.x = element_text(angle=-35))
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
-
 Moving forward, we will filter our `DESeqDataSet` as to only include genes that have a read mapped for at least one sample.
 
-
-```r
+```{r}
 dim(DESeq.ds)
-```
 
-```
-[1] 60660    21
-```
-
-```r
 keep_genes <- rowSums(counts(DESeq.ds)) > 0
 DESeq.ds <- DESeq.ds[keep_genes, ]
 dim(DESeq.ds)
 ```
 
-```
-[1] 53092    21
-```
-
 **Normalizing read counts for Sequencing Depth**
 
-
-```r
+```{r}
 DESeq.ds <- estimateSizeFactors(DESeq.ds)
 
 plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)), 
      ylab = 'library sizes', xlab = 'size factors', cex = 0.6)
 ```
-
-![](finish_aligning_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 Assumptions:
 
@@ -421,8 +354,7 @@ Assumptions:
 
 We see that our size factors are varying a bit more than around 1, though at this time we will continue with `rlog` normaliztion.
 
-
-```r
+```{r}
 par(mfrow = c(1,2))
 boxplot(log2(counts(DESeq.ds)+1), notch=TRUE,main = "Non-normalized read counts",ylab="log2(read counts)", cex = .6)
 
@@ -430,10 +362,7 @@ boxplot(log2(counts(DESeq.ds)+1), notch=TRUE,main = "Non-normalized read counts"
 boxplot(log2(counts(DESeq.ds, normalize= TRUE)+1), notch=TRUE,main = "Size-factor-normalized read counts",ylab="log2(read counts)", cex = .6)
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
-
-
-```r
+```{r}
 if (!exists('DESeq.rlog')) {
   DESeq.rlog <- rlog(DESeq.ds, blind = TRUE)
 }
@@ -458,12 +387,9 @@ plot(assay(DESeq.rlog)[,'SRR8440518'],
      ylab ='SRR8440529')
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
-
 **Mean vs Stdev before `rlog`**
 
-
-```r
+```{r}
 log.norm.counts <- 
   DESeq.ds %>% 
   counts(normalized=TRUE) %>% 
@@ -480,12 +406,9 @@ msd_plot$gg +
   ylab("standard deviation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
-
 **Mean vs Stdev after `rlog`**
 
-
-```r
+```{r}
 rlog.norm.counts <- 
   DESeq.rlog %>% 
   assay()
@@ -500,14 +423,11 @@ msd_plot$gg +
   coord_cartesian(ylim = c(0,3))
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
-
-### **Male vs Female Correlation Heatmap**
+## **Male vs Female Correlation Heatmap**
 
 First in order to check that there isn't large differences between our male and female patient cohorts, we will generate a correlation heatmap using Pearson correlation.
 
-
-```r
+```{r}
 library(stringr)
 corr_coeff <- cor(rlog.norm.counts, method = "pearson")
 
@@ -529,16 +449,13 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
-
 We don't see males and females clustering too closely together here, showing support that sex should not be a confounding factor moving forward.
 
-### **AD vs Control Correlation Heatmap**
+## **AD vs Control Correlation Heatmap**
 
 We can now generate the same Pearson correlation heatmap from above, though this time seperating by our true varible of interest: AD vs Control.
 
-
-```r
+```{r}
 corr_coeff <- cor(rlog.norm.counts, method = "pearson")
 
 new_names <- rownames(corr_coeff) %>% 
@@ -559,12 +476,9 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
-
 We can also evaluate the similarity of samples with simple hierarchical clustering:
 
-
-```r
+```{r}
 rlog_corr_coeff <- 
   rlog.norm.counts %>% 
   cor(method = "pearson") %>% 
@@ -577,12 +491,9 @@ as.dist(1-rlog_corr_coeff) %>%
        main = "rlog transformed read counts")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
-
 From the heatmap and clustering results above, it does not seem like our patient samples are easily seperable by overall expression profiles. In order to ensure that our conditions truly do show different gene expression profiles, we will only select genes that were found to be differentially expressed between the conditions in the paper. We can convert our `ensemblID` s to Gene-Ontology format through the use of the `biomaRt` Bioconductor package.
 
-
-```r
+```{r}
 library(biomaRt)
 
 mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
@@ -604,19 +515,7 @@ ensembl_df %>%
   kable()
 ```
 
-
-
-|ensembl_gene_id |ensembl_transcript_id |hgnc_symbol |
-|:---------------|:---------------------|:-----------|
-|ENSG00000121410 |ENST00000596924       |A1BG        |
-|ENSG00000121410 |ENST00000263100       |A1BG        |
-|ENSG00000121410 |ENST00000595014       |A1BG        |
-|ENSG00000121410 |ENST00000598345       |A1BG        |
-|ENSG00000121410 |ENST00000600966       |A1BG        |
-|ENSG00000102977 |ENST00000620761       |ACD         |
-
-
-```r
+```{r}
 ensembl_ids <- gsub(".[0-9]+$", "", rownames(log.norm.counts))
 
 gene_names <-
@@ -659,10 +558,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
-
-
-```r
+```{r}
 rlog_corr_coeff <- 
   study_counts %>% 
   cor(method = "pearson") %>% 
@@ -675,27 +571,21 @@ as.dist(1-rlog_corr_coeff) %>%
        main = "rlog transformed read counts")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
-
 Now we see much more distict grouping between our clinical groups, a good sign for differential expression analysis down the line.
 
-### **PCA**
+## **PCA**
 
 Lastly, in order to determine the magnitude in the differences between our samples, we make use of Principle Components Analysis
 
-
-```r
+```{r}
 plotPCA(DESeq.rlog)
 ```
-
-![](finish_aligning_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
 
 Again, we see performing PCA on all genes does not yield a large amount of seperation between our clinical groups. Below we perform the same analysis with the study-highlighted genes from before.
 
 **Gene-specific**
 
-
-```r
+```{r}
 ensembl_ids <- gsub(".[0-9]+$", "", rownames(DESeq.rlog))
 
 gene_names <-
@@ -716,7 +606,5 @@ DESeq.rlog.subset <- subset(DESeq.rlog, rownames(DESeq.rlog) != "NO_GENE_NAME_MA
 
 plotPCA(DESeq.rlog.subset)
 ```
-
-![](finish_aligning_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 We now see a much clearer distinction between clinical groups.

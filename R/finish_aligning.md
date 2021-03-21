@@ -1,12 +1,19 @@
-## **NGS RNA-Seq Project**
+---
+title: "NGS RNA-Seq Project\n\n <font size=6> Progress Report: Finish Aligning and Generate Read Counts </font>"
+author: "Jake Sauter"
+date: "3/19/2021"
+output: 
+  html_document: 
+    toc: true
+    toc_float: false
+    keep_md: true
+editor_options: 
+  chunk_output_type: inline
+---
 
-**Progress Report: Finish Aligning and Generate Read Counts </font>"**
 
-A report by: **Jake Sauter**
 
-date: 3/19/2021
-
-### **Background**
+## **Background**
 
 Information the `fastq` files used in this study can be found [here](https://www.ncbi.nlm.nih.gov/Traces/study/?page=3&acc=PRJNA515044&o=diagnosis_sam_s%3Ad%253Bacc_s%3Bacc_s%3Aa) as well as [NCBI GEO](https://www.ncbi.nlm.nih.gov//geo/query/acc.cgi?acc=GSE125050)
 
@@ -14,7 +21,7 @@ Information the `fastq` files used in this study can be found [here](https://www
 
 > <font size=2.5> All subjects had been characterized clinically and neuropathologically by the Arizona Study of Aging and Neurodegenerative Dis-ease/Brain and Body Donation Program (Beach et al., 2015). All AD subjects were clinically diagnosed with AD in life and brains wereneuropathologically confirmed to have ''frequent'' CERAD neuritic plaque densities (Mirra et al., 1991) and Braak score V or VI (Braakand Braak, 1991). Controls did not have dementia, AD or other neurological disease diagnoses in life. </font>
 
-### **Downloading Myeloid/Microglia Data**
+## **Downloading Myeloid/Microglia Data**
 
 For the first iteration, I have chosen to proceed with one of the four available cell types, being **myeloid** / microglia cells. However, the script below can be easily be adapted to download all `cell_types` with a simple `for` loop.
 
@@ -44,9 +51,9 @@ for acc_num in "${acc_nums[@]}" ; do
 
 Note that for microglia data specifically, author's have included the following table, found in the `Experimental model and subject details` section of the publication:
 
-![](R/images/paste-A8FC8DC9.png)
+![](images/paste-A8FC8DC9.png)
 
-### **Downloading STAR resources**
+## **Downloading STAR resources**
 
 In order to generate a STAR index for later mapping, we will first need to download the human reference genome, as well as the human reference annotation of genes that is compatible with this version of the human reference genome.
 
@@ -71,7 +78,7 @@ STAR --runMode  genomeGenerate \
      --sjdbOverhang 49 
 ```
 
-### **TrimGalore short read trimming --\> FastQC --\> STAR**
+## **TrimGalore short read trimming --\> FastQC --\> STAR**
 
 Adapter sequences were found to be present during initial studies of this dataset, so it is best to use `trim_galore` in order to remove these sequences first.
 
@@ -127,7 +134,7 @@ for fastq_file in $trimmed_files; do
 done
 ```
 
-### **QC Issues**
+## **QC Issues**
 
 Signs of cyclic GC content for some runs, are present in the dataset, however fastq tile coordinates **are not available** in the GEO dataset to allow for selective tile filtering.
 
@@ -135,7 +142,7 @@ Signs of cyclic GC content for some runs, are present in the dataset, however fa
 
 Particularly these issues were seen in three of the samples, with the effects occurring with varying degree. These samples were `SRR8440539`, `SRR8440524`, and `SRR8440538`.
 
-### **Calculating Percent Unmapped Reads**
+## **Calculating Percent Unmapped Reads**
 
 
 ```bash
@@ -198,13 +205,13 @@ Percentage of unmapped reads for SRR8440542: 8.16%
 
 From the about output, we see that `SRR8440463` as an unusually high amount of unmapped reads compared to all other samples in the study. When cross-referenceing our previously generated `MultiQC` report from earlier, we can see that the GC content of this sample appears to be off compared to all other samples as well, possibly indicating contamination or other library quality issues.
 
-![](R/images/paste-E644752B.png)
+![](images/paste-E644752B.png)
 
 **Problematic cyclic GC samples from before**: `SRR8440524`, `SRR8440538`, and `SRR8440539` **NOT** `SRR8440463` that we see with GC-rich contamination above.
 
 We will keep these QC issues in mind moving forward, and possibly remove the samples before analysis in `R`
 
-### **Generating FeatureCounts**
+## **Generating FeatureCounts**
 
 
 ```bash
@@ -227,7 +234,7 @@ featureCounts \
   -T 14 $bam_files
 ```
 
-### **Forming a DESeq2 object from featureCounts data**
+## **Forming a DESeq2 object from featureCounts data**
 
 Below we will use the `DESeq2` R package to make a `DESeqDataSet` from our resultant files from running featureCounts. At this step, I have chosen to remove our **4** samples with QC issues after preliminary analysis.
 
@@ -363,7 +370,7 @@ DESeq.ds %>%
 |ENSG00000284332.1 |          0|          0|          0|          0|          0|
 |ENSG00000237613.2 |          0|          0|          0|          0|          0|
 
-### **Read Mapping Quality Assessment**
+## **Read Mapping Quality Assessment**
 
 **Number of reads sequenced per sample**
 
@@ -502,7 +509,7 @@ msd_plot$gg +
 
 ![](finish_aligning_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
-### **Male vs Female Correlation Heatmap**
+## **Male vs Female Correlation Heatmap**
 
 First in order to check that there isn't large differences between our male and female patient cohorts, we will generate a correlation heatmap using Pearson correlation.
 
@@ -533,7 +540,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
 
 We don't see males and females clustering too closely together here, showing support that sex should not be a confounding factor moving forward.
 
-### **AD vs Control Correlation Heatmap**
+## **AD vs Control Correlation Heatmap**
 
 We can now generate the same Pearson correlation heatmap from above, though this time seperating by our true varible of interest: AD vs Control.
 
@@ -679,7 +686,7 @@ as.dist(1-rlog_corr_coeff) %>%
 
 Now we see much more distict grouping between our clinical groups, a good sign for differential expression analysis down the line.
 
-### **PCA**
+## **PCA**
 
 Lastly, in order to determine the magnitude in the differences between our samples, we make use of Principle Components Analysis
 
