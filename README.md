@@ -1,10 +1,10 @@
 ## **NGS RNA-Seq Project**
-
 **Progress Report: Finish Aligning and Generate Read Counts**
 
 A report by: **Jake Sauter**
 
 date: 3/19/2021
+
 
 ### **Background**
 
@@ -134,8 +134,6 @@ Signs of cyclic GC content for some runs, are present in the dataset, however fa
 [Github issue showing that SRA does not store this information](https://github.com/ncbi/sra-tools/issues/130)
 
 Particularly these issues were seen in three of the samples, with the effects occurring with varying degree. These samples were `SRR8440539`, `SRR8440524`, and `SRR8440538`.
-
-An example of this issue is shown below: 
 
 ![](imgs/per_base_seq_content_fail.png){width="50%"}
 
@@ -692,7 +690,7 @@ Lastly, in order to determine the magnitude in the differences between our sampl
 plotPCA(DESeq.rlog)
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
 
 Again, we see performing PCA on all genes does not yield a large amount of seperation between our clinical groups. Below we perform the same analysis with the study-highlighted genes from before.
 
@@ -721,6 +719,6 @@ DESeq.rlog.subset <- subset(DESeq.rlog, rownames(DESeq.rlog) != "NO_GENE_NAME_MA
 plotPCA(DESeq.rlog.subset)
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+![](R/finish_aligning_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 We now see a much clearer distinction between clinical groups.
