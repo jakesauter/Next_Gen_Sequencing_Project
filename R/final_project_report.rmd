@@ -318,25 +318,23 @@ cell_type="myeloid"
 fastq_files=$(ls "${data_storage_dir}/${cell_type}_fastq_files"/*.fastq.gz)
 
 trim_galore_outdir="${data_storage_dir}/trimmed_${cell_type}_fastqs"
+mkdir $trim_galore_outdir
+
 fastqc_outdir="${data_storage_dir}/trimmed_${cell_type}_fastqc"
 mkdir $fastqc_outdir
-mkdir $trim_galore_outdir
 
 $trim_galore $fastq_files \
 --output_dir="${trim_galore_outdir}" \
 --cores 14 --phred33 --gzip 
 
 trimmed_files=$(ls $trim_galore_outdir/*.fq.gz)
+
 fastqc $trimmed_files \
 --outdir=$fastqc_outdir \
 --threads=14 --noextract
 
 cd $fastqc_outdir
 multiqc .
-
-cell_type="myeloid"
-trim_galore_outdir="${data_storage_dir}/trimmed_${cell_type}_fastqs"
-trimmed_files=$(ls $trim_galore_outdir/*.fq.gz)
 
 for fastq_file in $trimmed_files; do
   base=$(basename $fastq_file)
@@ -375,11 +373,17 @@ featureCounts \
 
 ### **`FastQC` Raw Data QC**
 
-Signs of cyclic GC content for some runs, are present in the dataset, however fastq tile coordinates **are not available** in the GEO dataset to allow for selective tile filtering.
+Signs of cyclic GC content for some runs are present in the dataset, however fastq tile coordinates **are not available** in the GEO dataset to allow for selective tile filtering.
 
 [Github issue showing that SRA does not store this information](https://github.com/ncbi/sra-tools/issues/130)
 
-Particularly these issues were seen in three of the samples, with the effects occurring with varying degree. These samples were `SRR8440539`, `SRR8440524`, and `SRR8440538`.
+Particularly these issues were seen in three of the samples, with the effects occurring with varying degree. These samples were 
+
+* `SRR8440539` [FastQC Report](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440539_fastqc.html)
+* `SRR8440524` [FastQC Report](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440524_fastqc.html)
+* `SRR8440538` [FastQC Report](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440538_fastqc.html)
+
+FastQC Reports for 
 
 ![](../imgs/per_base_seq_content_fail.png){width="50%"}
 
