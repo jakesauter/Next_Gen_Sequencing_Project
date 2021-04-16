@@ -8,7 +8,7 @@ output:
     toc_float: false
     keep_md: true
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 
@@ -82,7 +82,10 @@ STAR --runMode  genomeGenerate \
 
 Adapter sequences were found to be present during initial studies of this dataset, so it is best to use `trim_galore` in order to remove these sequences first.
 
-In the script below, once all of the files are trimmed and saved, `FastQC` (paired with `multiqc` aggregation) is used to facilitate sequence quality control.**Script for data processing:**
+In the script below, once all of the files are trimmed and saved, `FastQC` (paired with `multiqc` aggregation) is used to facilitate sequence quality control.
+
+
+**Script for data processing:**
 
 
 ```bash
@@ -251,39 +254,90 @@ library(magrittr)
 
 read_counts <- read.table(
   '../featCounts/featCounts_genes.txt', 
-  header = TRUE, stringsAsFactors = FALSE)
+  header = TRUE, stringsAsFactors = FALSE) 
 
 orig_names <- colnames(read_counts)
 colnames(read_counts) <- gsub(".*(SRR[0-9]+).*", "\\1", orig_names)
 row.names(read_counts) <- make.names(read_counts$Geneid)
 read_counts <- read_counts[,-c(1:6)]
+read_counts <- as.matrix(read_counts)
 
 ##FILTERING OUT QC FAILED SAMPLES
 keep_samples <- 
   colnames(read_counts) %in% 
             c('SRR8440524', 'SRR8440463',
-            'SRR8440538', 'SRR8440539') %>% 
+            'SRR8440538', 'SRR8440539', 
+             "SRR8440484", "SRR8440488", 
+             "SRR8440447", "SRR8440517") %>% 
   not()
 
 read_counts <- 
   read_counts[ , keep_samples]
 
 read_counts %>% 
-  head() %>% 
-  .[1:4] %>% 
+  .[1:4, 1:5] %>% 
   kable()
 ```
 
 
 
-|                  | SRR8440443| SRR8440447| SRR8440448| SRR8440449|
-|:-----------------|----------:|----------:|----------:|----------:|
-|ENSG00000223972.5 |          0|          0|          0|          0|
-|ENSG00000227232.5 |          0|          1|          1|          0|
-|ENSG00000278267.1 |          0|          0|          0|          0|
-|ENSG00000243485.5 |          0|          0|          0|          0|
-|ENSG00000284332.1 |          0|          0|          0|          0|
-|ENSG00000237613.2 |          0|          0|          0|          0|
+|                  | SRR8440443| SRR8440448| SRR8440449| SRR8440477| SRR8440482|
+|:-----------------|----------:|----------:|----------:|----------:|----------:|
+|ENSG00000223972.5 |          0|          0|          0|          0|          0|
+|ENSG00000227232.5 |          0|          1|          0|          0|          0|
+|ENSG00000278267.1 |          0|          0|          0|          0|          0|
+|ENSG00000243485.5 |          0|          0|          0|          0|          0|
+
+**Converting gene count Ensembl IDs to cannoncical gene names**
+
+
+**gene-data from gtf files**
+
+
+```r
+library(stringr)
+library(magrittr)
+library(rtracklayer)
+library(plyranges)
+
+# TODO: Use the gtf to map gene ids to gene 
+# names instead of biomart 
+
+if (!exists('genes_df')) {
+  genes_df <- 
+    read_gff("../gtf/gencode.v36.annotation.gtf.gz", 
+                       genome_info="hg38") %>% 
+    select(gene_id, gene_type, gene_name) %>% 
+    as.data.frame()
+}
+
+
+gene_info_df <- 
+  data.frame(gencode_id = rownames(read_counts)) %>% 
+  left_join(., genes_df, 
+            by = c('gencode_id' = 'gene_id')) %>% 
+  select(gencode_id, gene_name, gene_type) %>% 
+  filter(gene_type == 'protein_coding') %>% 
+  group_by(gencode_id, gene_name) %>% 
+  filter(row_number() == 1) %>% 
+  ungroup() %>% 
+  filter(!str_detect(gene_name, '^MT-'))
+
+# > gene_info_df$gene_name %>% table() %>% .[. > 1]
+# .
+#  ACTL10 AKAP17A    ASMT   ASMTL    CD99   CRLF2  CSF2RA   DHRSX 
+#       2       2       2       2       2       2       2       2 
+#  GTPBP6   IL3RA    IL9R   MATR3   P2RY8  PDE11A  PLCXD1 POLR2J3 
+#       2       2       2       2       2       2       2       2 
+# PPP2R3B    SHOX SLC25A6  SMIM40 TMSB15B   VAMP7  WASH6P   ZBED1 
+#       2       2       2       2       2       2       2       2 
+
+read_counts <- 
+  read_counts[gene_info_df$gencode_id, ]
+```
+
+**Filtering mitochondrial reads**
+
 
 Now that we have our raw read counts, lets gather information about our samples to supply to the `colData` parameter of `DESeqDataSetFromMatrix`.
 
@@ -293,10 +347,11 @@ accession_table <-
   read.table('../accession_tables/Sra_run_table.txt', 
              header = TRUE, sep = ',', stringsAsFactors = FALSE) %>% 
   as.data.frame() %>% 
-  filter(Cell_type == 'myeloid') %>% 
+  filter(Cell_type == 'myeloid', 
+         !is.na(sex)) %>% 
   dplyr::select(Run, Diagnosis, sex, 
          expired_age, Cell_type) %>% 
-  arrange(Diagnosis)
+  arrange(Diagnosis, sex)
   
 accession_table %>% 
   kable()
@@ -306,28 +361,24 @@ accession_table %>%
 
 |Run        |Diagnosis |sex    |expired_age |Cell_type |
 |:----------|:---------|:------|:-----------|:---------|
-|SRR8440477 |AD        |male   |88          |myeloid   |
-|SRR8440501 |AD        |male   |79          |myeloid   |
 |SRR8440448 |AD        |female |84          |myeloid   |
-|SRR8440484 |AD        |NA     |59          |myeloid   |
-|SRR8440486 |AD        |male   |75          |myeloid   |
-|SRR8440488 |AD        |NA     |81          |myeloid   |
 |SRR8440514 |AD        |female |78          |myeloid   |
 |SRR8440538 |AD        |female |84          |myeloid   |
+|SRR8440477 |AD        |male   |88          |myeloid   |
+|SRR8440501 |AD        |male   |79          |myeloid   |
+|SRR8440486 |AD        |male   |75          |myeloid   |
 |SRR8440542 |AD        |male   |70          |myeloid   |
 |SRR8440463 |AD        |male   |72          |myeloid   |
 |SRR8440511 |Control   |female |59          |myeloid   |
 |SRR8440518 |Control   |female |88          |myeloid   |
-|SRR8440527 |Control   |male   |79          |myeloid   |
-|SRR8440447 |Control   |NA     |73          |myeloid   |
 |SRR8440443 |Control   |female |>90         |myeloid   |
+|SRR8440529 |Control   |female |83          |myeloid   |
+|SRR8440527 |Control   |male   |79          |myeloid   |
 |SRR8440449 |Control   |male   |74          |myeloid   |
 |SRR8440482 |Control   |male   |>90         |myeloid   |
 |SRR8440513 |Control   |male   |>90         |myeloid   |
-|SRR8440517 |Control   |NA     |58          |myeloid   |
 |SRR8440524 |Control   |male   |86          |myeloid   |
 |SRR8440525 |Control   |male   |86          |myeloid   |
-|SRR8440529 |Control   |female |83          |myeloid   |
 |SRR8440531 |Control   |male   |38          |myeloid   |
 |SRR8440536 |Control   |male   |61          |myeloid   |
 |SRR8440539 |Control   |male   |>90         |myeloid   |
@@ -335,25 +386,50 @@ accession_table %>%
 From this accession table, we can map our accession ids to any clinical variable we like, such as `Diagnosis`, which is our main experimental group condition in this analysis. `Diagnosis` in our case tells us whether or not the diseased patient showed signs of Alzheimer's disease or not (control).
 
 
+
+
+
 ```r
 conditions <- 
   colnames(read_counts) %>% 
   map(~accession_table[
-            accession_table['Run'] == .x, 
-                               'Diagnosis']) %>% 
-  unlist()
-  
+            accession_table['Run'] == .x, ]) %>% 
+  bind_rows() 
 
-sample_info <- 
-  DataFrame(condition = conditions,
-            row.names = names(read_counts))
+
+sample_info <-
+  DataFrame(conditions,
+            row.names = conditions$Run)
+
 
 DESeq.ds <- 
   DESeqDataSetFromMatrix(
     countData = as.matrix(read_counts),
     colData = sample_info,
-    design = ~ condition)
+    rowData = gene_info_df, 
+    design = ~ Diagnosis + sex)
 
+
+DESeq.ds %>% 
+  colData() %>% 
+  head() %>% 
+  kable()
+```
+
+
+
+|           |Run        |Diagnosis |sex    |expired_age |Cell_type |
+|:----------|:----------|:---------|:------|:-----------|:---------|
+|SRR8440443 |SRR8440443 |Control   |female |>90         |myeloid   |
+|SRR8440448 |SRR8440448 |AD        |female |84          |myeloid   |
+|SRR8440449 |SRR8440449 |Control   |male   |74          |myeloid   |
+|SRR8440477 |SRR8440477 |AD        |male   |88          |myeloid   |
+|SRR8440482 |SRR8440482 |Control   |male   |>90         |myeloid   |
+|SRR8440486 |SRR8440486 |AD        |male   |75          |myeloid   |
+
+
+
+```r
 DESeq.ds %>% 
   counts() %>% 
   head() %>% 
@@ -363,14 +439,14 @@ DESeq.ds %>%
 
 
 
-|                  | SRR8440443| SRR8440447| SRR8440448| SRR8440449| SRR8440477|
-|:-----------------|----------:|----------:|----------:|----------:|----------:|
-|ENSG00000223972.5 |          0|          0|          0|          0|          0|
-|ENSG00000227232.5 |          0|          1|          1|          0|          0|
-|ENSG00000278267.1 |          0|          0|          0|          0|          0|
-|ENSG00000243485.5 |          0|          0|          0|          0|          0|
-|ENSG00000284332.1 |          0|          0|          0|          0|          0|
-|ENSG00000237613.2 |          0|          0|          0|          0|          0|
+|                   | SRR8440443| SRR8440448| SRR8440449| SRR8440477| SRR8440482|
+|:------------------|----------:|----------:|----------:|----------:|----------:|
+|ENSG00000186092.6  |          0|          0|          0|          0|          0|
+|ENSG00000284733.1  |          0|          0|          0|          0|          0|
+|ENSG00000284662.1  |          0|          0|          0|          0|          0|
+|ENSG00000187634.12 |          0|          1|          0|          1|          9|
+|ENSG00000188976.11 |        123|        256|        128|        134|        138|
+|ENSG00000187961.14 |         65|         48|          6|         29|         56|
 
 ### **Read Mapping Quality Assessment**
 
@@ -387,7 +463,7 @@ colSums(counts(DESeq.ds)) %>%
   theme(axis.text.x = element_text(angle=-35))
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 Moving forward, we will filter our `DESeqDataSet` as to only include genes that have a read mapped for at least one sample.
 
@@ -397,7 +473,7 @@ dim(DESeq.ds)
 ```
 
 ```
-[1] 60660    21
+[1] 19949    17
 ```
 
 ```r
@@ -407,26 +483,149 @@ dim(DESeq.ds)
 ```
 
 ```
-[1] 53092    21
+[1] 18968    17
 ```
 
 **Normalizing read counts for Sequencing Depth**
 
+**Question**: Why does `estimateSizeFactors` remove some genes? 
+
+
+
+```r
+print(nrow(DESeq.ds))
+```
+
+```
+[1] 18968
+```
+
+```r
+DESeq.ds %>% 
+  rownames() %>% 
+  duplicated() %>% 
+  any()
+```
+
+```
+[1] FALSE
+```
 
 ```r
 DESeq.ds <- estimateSizeFactors(DESeq.ds)
 
-plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)), 
-     ylab = 'library sizes', xlab = 'size factors', cex = 0.6)
+print(nrow(DESeq.ds))
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+```
+[1] 18968
+```
+
+```r
+DESeq.ds %>% 
+  rownames() %>% 
+  duplicated() %>% 
+  any()
+```
+
+```
+[1] FALSE
+```
+
+```r
+plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)), 
+     ylab = 'library sizes', xlab = 'size factors')
+```
+
+![](finish_aligning_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 Assumptions:
 
 -   Most genes are not changing across conditions
 
 -   Size factors should be around 1
+
+
+**Why does this appear to be random? Could there be some outlier genes that are taking up a large proportion of the reads in some of the samples?**
+
+
+```r
+raw_read_counts <- read.table(
+  '../featCounts/featCounts_genes.txt', 
+  header = TRUE, stringsAsFactors = FALSE)
+
+orig_names <- colnames(raw_read_counts)
+colnames(raw_read_counts) <- gsub(".*(SRR[0-9]+).*", "\\1", orig_names)
+row.names(raw_read_counts) <- make.names(raw_read_counts$Geneid)
+raw_read_counts <- raw_read_counts[,-c(1:6)]
+
+
+ensembl_ids <- 
+  raw_read_counts %>% 
+  rownames() %>% 
+  gsub('\\.[0-9]+', '', .)
+
+gene_name_df <-
+  data.frame(ensemble_id = ensembl_ids) %>% 
+  left_join(., ensembl_df, 
+          by = c('ensemble_id' = 'ensembl_gene_id')) %>% 
+  mutate(hgnc_symbol = 
+           if_else(hgnc_symbol == "" | is.na(hgnc_symbol), 
+                   ensemble_id, hgnc_symbol)) %>% 
+  group_by(ensemble_id) %>% 
+  filter(row_number() == 1) %>% 
+  ungroup()
+
+raw_read_counts <- 
+  as.matrix(raw_read_counts)
+
+rownames(raw_read_counts) <- 
+        gene_name_df$hgnc_symbol
+
+# Error in `.rowNamesDF<-`(x, value = value) : 
+#   duplicate 'row.names' are not allowed
+# In addition: Warning message:
+# non-unique values when setting 'row.names': ‘ACTL10’, ‘CCDC39’, ‘DUXAP8’, ‘GOLGA8M’, ‘HERC3’, ‘ITFG2-AS1’, ‘LINC01238’, ‘LINC02203’, ‘PINX1’, ‘POLR2J3’, ‘POLR2J4’, ‘RMRP’, ‘SCARNA4’, ‘SLFN12L’, ‘SNORA16A’, ‘SNORA17B’, ‘SNORA50A’, ‘SNORD38B’, ‘SNORD3D’, ‘TBCE’ 
+
+samples <- 
+  DESeq.ds %>%
+  counts() %>% 
+  colnames()
+
+for (sample in samples) {
+  print(sample) 
+  
+  raw_read_counts[, sample] %>% 
+    .[. > 1000] %>% 
+    round(-5) %>% 
+    table() %>% 
+    kable() %>% 
+    print()
+}
+```
+
+**Is is the same few genes in every sample that have these high counts?**
+
+Lets print the name of every gene that gets above 50,000 reads for each sample
+
+**IT WAS MITOCHONDRIAL READS**, maybe it would be best to filter
+out `read_counts` matrix columns to remove mitochondrial reads
+before making our DESeq2 dataset.
+
+
+```r
+for (sample in samples) {
+  print(sample)
+  
+  raw_read_counts[, sample] %>% 
+  as.data.frame(., row.names = rownames(raw_read_counts)) %>% 
+  filter(`.` > 30e3) %>% 
+  kable() %>% 
+  print()
+}
+```
+
+
 
 We see that our size factors are varying a bit more than around 1, though at this time we will continue with `rlog` normaliztion.
 
@@ -439,15 +638,16 @@ boxplot(log2(counts(DESeq.ds)+1), notch=TRUE,main = "Non-normalized read counts"
 boxplot(log2(counts(DESeq.ds, normalize= TRUE)+1), notch=TRUE,main = "Size-factor-normalized read counts",ylab="log2(read counts)", cex = .6)
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 
 ```r
+library(patchwork)
+
 if (!exists('DESeq.rlog')) {
   DESeq.rlog <- rlog(DESeq.ds, blind = TRUE)
 }
 
-par(mfrow = c(1,2))
 
 log.norm.counts <-
   DESeq.ds %>% 
@@ -455,19 +655,35 @@ log.norm.counts <-
   {.+1} %>% 
   log2()
 
-plot(log.norm.counts[,c('SRR8440518', 'SRR8440529')], cex=.1,
-     main = "size factor and log2-transformed")
+
+p1 <-
+  data.frame('SRR8440518' = log.norm.counts[,'SRR8440518'], 
+           'SRR8440529' = log.norm.counts[,'SRR8440529']) %>% 
+  ggplot() + 
+  geom_point(aes(x = SRR8440518, y = SRR8440529), 
+             alpha = 0.01) + 
+  geom_abline(slope = 1, intercept = 0, 
+              lty = 2, col = 'red') + 
+  ggtitle("size factor and log2-transformed") + 
+  xlab('SRR8440518') + ylab('SRR8440529')
 
 ## the rlog-transformed counts are stored in the accessor "assay"
-plot(assay(DESeq.rlog)[,'SRR8440518'],
-     assay(DESeq.rlog)[,'SRR8440529'],
-     main = "rlog transformed",
-     cex=.1, 
-     xlab ='SRR8440518',
-     ylab ='SRR8440529')
+p2 <-
+  data.frame('SRR8440518' = assay(DESeq.rlog)[,'SRR8440518'], 
+           'SRR8440529' = assay(DESeq.rlog)[,'SRR8440529']) %>% 
+  ggplot() + 
+  geom_point(aes(x = SRR8440518, y = SRR8440529), 
+             alpha = 0.01) + 
+  geom_abline(slope = 1, intercept = 0, 
+              lty = 2, col = 'red') + 
+  ggtitle("rlog transformed") + 
+  xlab('SRR8440518') + ylab('SRR8440529') 
+
+
+p1 + p2
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 **Mean vs Stdev before `rlog`**
 
@@ -489,7 +705,7 @@ msd_plot$gg +
   ylab("standard deviation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
 
 **Mean vs Stdev after `rlog`**
 
@@ -509,7 +725,7 @@ msd_plot$gg +
   coord_cartesian(ylim = c(0,3))
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
 
 ### **Male vs Female Correlation Heatmap**
 
@@ -538,7 +754,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
 
 We don't see males and females clustering too closely together here, showing support that sex should not be a confounding factor moving forward.
 
@@ -568,7 +784,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
 
 We can also evaluate the similarity of samples with simple hierarchical clustering:
 
@@ -586,64 +802,26 @@ as.dist(1-rlog_corr_coeff) %>%
        main = "rlog transformed read counts")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
 
 From the heatmap and clustering results above, it does not seem like our patient samples are easily seperable by overall expression profiles. In order to ensure that our conditions truly do show different gene expression profiles, we will only select genes that were found to be differentially expressed between the conditions in the paper. We can convert our `ensemblID` s to Gene-Ontology format through the use of the `biomaRt` Bioconductor package.
 
 
-```r
-library(biomaRt)
-
-mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
-
-genes <- 
-  c('LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 'PTPRZ1', 'IGSF10', 'GRIA2', 'MEIS1', 'SELENBP1', 'SERPINF1', 'RIMS2', 'ASTN1', 'TLN2', 'ZNF532', 'ZNF662', 'NIN', 'ULK3', 'SLC38A7', 'FOXP1', 'ARSA', 'CTBP1-AS', 'LOC102725328', 'CBX6', 'GYPC', 'FBRSL1', 'SMAD7', 'PLXNC1', 'CLDN15', 'TSHZ3', 'KCNJ5', 'DPYD', 'STEAP3', 'RUNX3', 'PTPRG', 'ACD', 'TTYH3', 'LOC100133445', 'LOC102724549', 'VENTX', 'TM9SF1', 'SMIM3', 'ZNF703', 'TGFBI', 'EMP2', 'PSTPIP1', 'ZNF696', 'RFX2', 'APOE', 'ATOH8', 'ADAM8', 'GAS2L1', 'CHCHD5', 'ADAMTS13', 'A1BG', 'IL15', 'SECTM1', 'FAM109A', 'LOC100507639', 'ZNF843', 'S100A4', 'LSR')
-
-attributes <- c('ensembl_gene_id','ensembl_transcript_id','hgnc_symbol')
-
-ensembl_df <- 
-  getBM(attributes=attributes, 
-        filters="hgnc_symbol",
-        values=genes,
-        mart=mart, 
-        uniqueRows=T)
-
-ensembl_df %>% 
-  head() %>% 
-  kable()
-```
-
-
-
-|ensembl_gene_id |ensembl_transcript_id |hgnc_symbol |
-|:---------------|:---------------------|:-----------|
-|ENSG00000121410 |ENST00000596924       |A1BG        |
-|ENSG00000121410 |ENST00000263100       |A1BG        |
-|ENSG00000121410 |ENST00000595014       |A1BG        |
-|ENSG00000121410 |ENST00000598345       |A1BG        |
-|ENSG00000121410 |ENST00000600966       |A1BG        |
-|ENSG00000102977 |ENST00000620761       |ACD         |
 
 
 ```r
-ensembl_ids <- gsub(".[0-9]+$", "", rownames(log.norm.counts))
-
-gene_names <-
-  ensembl_ids %>% 
-  sapply(., function(ensembl_id) {
-    gene_name <- ensembl_df[ensembl_df$ensembl_gene_id == ensembl_id, 
-                                     'hgnc_symbol'][1]
-    if (is.na(gene_name)) {
-      gene_name <- "NO_GENE_NAME_MAPPING"
-    }
-    
-    return(gene_name)
-  })
-
-rownames(rlog.norm.counts) <- gene_names
+## Determine 1000 most variable genes
+genes <-
+  assay(DESeq.ds) %>%  
+  apply(1, var) %>% 
+  sort(decreasing = TRUE) %>% 
+  names(.) %>% 
+  head(1000)
 
 study_counts <- 
   rlog.norm.counts[rownames(rlog.norm.counts) %in% genes, ]
+
+
 
 new_names <- colnames(study_counts) %>% 
   map(~accession_table[
@@ -668,7 +846,7 @@ as.dist(1-corr_coeff, upper = TRUE) %>%
   pheatmap::pheatmap(., main = "Pearson correlation")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 
 ```r
@@ -684,7 +862,7 @@ as.dist(1-rlog_corr_coeff) %>%
        main = "rlog transformed read counts")
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 Now we see much more distict grouping between our clinical groups, a good sign for differential expression analysis down the line.
 
@@ -694,10 +872,10 @@ Lastly, in order to determine the magnitude in the differences between our sampl
 
 
 ```r
-plotPCA(DESeq.rlog)
+plotPCA(DESeq.rlog, intgroup = 'Diagnosis')
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
 Again, we see performing PCA on all genes does not yield a large amount of seperation between our clinical groups. Below we perform the same analysis with the study-highlighted genes from before.
 
@@ -705,27 +883,11 @@ Again, we see performing PCA on all genes does not yield a large amount of seper
 
 
 ```r
-ensembl_ids <- gsub(".[0-9]+$", "", rownames(DESeq.rlog))
+DESeq.rlog.subset <- subset(DESeq.rlog, rownames(DESeq.rlog) %in% genes)
 
-gene_names <-
-  ensembl_ids %>% 
-  sapply(., function(ensembl_id) {
-    gene_name <- ensembl_df[ensembl_df$ensembl_gene_id == ensembl_id, 
-                                     'hgnc_symbol'][1]
-    if (is.na(gene_name)) {
-      gene_name <- "NO_GENE_NAME_MAPPING"
-    }
-    
-    return(gene_name)
-  })
-
-
-rownames(DESeq.rlog) <- gene_names
-DESeq.rlog.subset <- subset(DESeq.rlog, rownames(DESeq.rlog) != "NO_GENE_NAME_MAPPING")
-
-plotPCA(DESeq.rlog.subset)
+plotPCA(DESeq.rlog.subset, intgroup = 'Diagnosis')
 ```
 
-![](finish_aligning_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+![](finish_aligning_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
 
 We now see a much clearer distinction between clinical groups.
