@@ -369,6 +369,9 @@ featureCounts \
 -T 14 $bam_files
 ```
 
+
+[Trimmed MultiQC HTML Report](https://jakesauter.github.io/Next_Gen_Sequencing_Project/trimmed_myeloid_multiqc_report.html)
+
 ## **Quality Control**
 
 ### **`FastQC` Raw Data QC**
@@ -383,11 +386,13 @@ Particularly these issues were seen in three of the samples, with the effects oc
 * `SRR8440524` [FastQC Report](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440524_fastqc.html)
 * `SRR8440538` [FastQC Report](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440538_fastqc.html)
 
-FastQC Reports for 
+An example of this failing behavior: 
 
 ![](../imgs/per_base_seq_content_fail.png){width="50%"}
 
 ### **`STAR` Alignment QC**
+
+In order to determine the percentage of reads mapped, we have used the `--outReadsUnmapped="Fastx"` parameter while running `STAR`, and now can compare the number of reads in our mapped files, versus the number of reads in our unmapped files. A `bash` function for performing this operation (`calculate_unampped_reads`) is applied to all of the `BAM` files generated in the `STAR` alignment phase of the report.
 
 ```{bash, eval=FALSE}
 #!/bin/bash
@@ -412,11 +417,13 @@ calculate_unampped_reads() {
 }
 
 for bam_file in $bam_files; do
-calculate_unampped_reads $bam_file &
-  done 
+  calculate_unampped_reads $bam_file &
+done 
 
 cat $parallel_tmp_dir/*.out
 ```
+
+Results of executing this code can be found below.
 
 ```{bash, eval=FALSE}
 Percentage of unmapped reads for SRR8440443: 5.90%
@@ -452,7 +459,14 @@ From the about output, we see that `SRR8440463` as an unusually high amount of u
 
 **Problematic cyclic GC samples from before**: `SRR8440524`, `SRR8440538`, and `SRR8440539` **NOT** `SRR8440463` that we see with GC-rich contamination above.
 
-We will keep these QC issues in mind moving forward, and possibly remove the samples before analysis in `R`
+**FastQC Reports**: 
+
+* [SRR8440524_fastqc.html](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440524_fastqc.html)
+* [SRR8440538_fastqc.html](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440538_fastqc.html)
+* [SRR8440539_fastqc.html](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440539_fastqc.html)
+* [SRR8440463_fastqc.html](https://jakesauter.github.io/Next_Gen_Sequencing_Project/SRR8440463_fastqc.html)
+
+We will keep these QC issues in mind moving forward, and remove the samples before analysis in `R`.
 
 ## **Data Analysis**
 
@@ -503,10 +517,6 @@ keep_samples <-
     'SRR8440538', 'SRR8440539', 
     "SRR8440484", "SRR8440488", 
     "SRR8440447", "SRR8440517"
-    # , 
-    # 'SRR8440511'
-    # ,
-    # "SRR8440449"
     ) %>% 
   not()
 
@@ -523,12 +533,10 @@ read_counts %>%
 **NOTE**: Below we are filtering for only protein-coding genes
 for proper size-factor normalization results, though 
 
-
 **NOTE** : Some gencode ids map to the same gene symbol 
 
 **TODO**: Peform parallel analysis for long-non-coding RNAs
 or incoroporate into this analysis? 
-
 
 
 ```{r}
@@ -598,7 +606,7 @@ DESeq.ds <-
     countData = as.matrix(read_counts),
     colData = sample_info,
     rowData = gene_info_df, 
-    design = ~ Diagnosis)
+    design = ~ Diagnosis + sex)
     # design = ~ Diagnosis + sex)
     # design = ~ Diagnosis + sex + APOE + pmi)
 
@@ -702,11 +710,6 @@ raw_read_counts <-
 
 rownames(raw_read_counts) <- 
         gene_name_df$hgnc_symbol
-
-# Error in `.rowNamesDF<-`(x, value = value) : 
-#   duplicate 'row.names' are not allowed
-# In addition: Warning message:
-# non-unique values when setting 'row.names': ‘ACTL10’, ‘CCDC39’, ‘DUXAP8’, ‘GOLGA8M’, ‘HERC3’, ‘ITFG2-AS1’, ‘LINC01238’, ‘LINC02203’, ‘PINX1’, ‘POLR2J3’, ‘POLR2J4’, ‘RMRP’, ‘SCARNA4’, ‘SLFN12L’, ‘SNORA16A’, ‘SNORA17B’, ‘SNORA50A’, ‘SNORD38B’, ‘SNORD3D’, ‘TBCE’ 
 
 samples <- 
   DESeq.ds %>%
@@ -1228,9 +1231,12 @@ labels <-
   left_join(gene_info_df, by = c('query_gencode_id' = 'gencode_id')) %>% 
   .$gene_name
   
-text(resultDESeq2$log2FoldChange[genes_to_plot] - 0.5,
-     -log10(resultDESeq2$padj[genes_to_plot]),
-     lab=labels, cex = 0.6)
+
+if (length(labels) > 0) {
+  text(resultDESeq2$log2FoldChange[genes_to_plot] - 0.5,
+       -log10(resultDESeq2$padj[genes_to_plot]),
+       lab=labels, cex = 0.6)
+}
 ```
 
 
