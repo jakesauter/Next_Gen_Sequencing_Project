@@ -490,6 +490,12 @@ library(plyranges)    # gtf file manipulation
 library(rtracklayer)  # gtf file manipulation
 ```
 
+```{r, echo=FALSE}
+filter <- dplyr::filter
+select <- dplyr::select
+```
+
+
 **Importing `featureCounts` Data into `DESeq2`**
 
 ```{r}
@@ -553,8 +559,8 @@ gene_info_df <-
   data.frame(gencode_id = rownames(read_counts)) %>% 
   left_join(., genes_df, 
             by = c('gencode_id' = 'gene_id')) %>% 
-  dplyr::select(gencode_id, gene_name, gene_type) %>% 
-  dplyr::filter(#not(gene_type %in% c('lncRNA', 'Mt_rRNA', 'Mt_tRNA')), 
+  select(gencode_id, gene_name, gene_type) %>% 
+  filter(#not(gene_type %in% c('lncRNA', 'Mt_rRNA', 'Mt_tRNA')), 
          # TODO: going to move forward with only protein coding genes
          #      genes for now as long-non-coding RNAs and MT-rna
          #      seem to really be messing up my sizefactor normalization
@@ -577,7 +583,7 @@ accession_table <-
   as.data.frame() %>% 
   filter(Cell_type == 'myeloid', 
          !is.na(sex)) %>% 
-  dplyr::select(Run, Diagnosis, sex,
+  select(Run, Diagnosis, sex,
                 expired_age, APOE, pmi, 
                 Cell_type) %>%
   arrange(Diagnosis, sex)
@@ -886,12 +892,13 @@ msd_plot$gg +
 # TODO: How many males/females in control vs AD? 
 ```
 
-**Male vs Female Correlation Heatmap**
+**Male vs Female Counfounding Analysis**
 
 First in order to check that there isn't large differences between our male and female patient cohorts, we will generate a correlation heatmap using Pearson correlation.
 
-```{r}
-library(stringr)
+```{r, fig.show='hold', out.width="50%"}
+par(mfrow = c(1, 2))
+
 corr_coeff <- cor(rlog.norm.counts, method = "pearson")
 
 new_names <- rownames(corr_coeff) %>% 
@@ -908,7 +915,11 @@ colnames(corr_coeff) <- new_names
 as.dist(1-corr_coeff, upper = TRUE) %>%
   as.matrix %>% 
   pheatmap::pheatmap(., main = "Pearson correlation")
+
+plotPCA(DESeq.rlog, intgroup = 'sex')
 ```
+
+We now see a much clearer distinction between clinical groups.
 
 We don't see males and females clustering too closely together here, showing support that sex should not be a confounding factor moving forward.
 
@@ -916,7 +927,7 @@ We don't see males and females clustering too closely together here, showing sup
 
 **AD vs Control Correlation Heatmap** We can now generate the same Pearson correlation heatmap from above, though this time seperating by our true varible of interest: AD vs Control.
 
-```{r}
+```{r, fig.show='hold', out.width="50%"}
 corr_coeff <- cor(rlog.norm.counts, method = "pearson")
 
 new_names <- rownames(corr_coeff) %>% 
@@ -933,6 +944,9 @@ colnames(corr_coeff) <- new_names
 as.dist(1-corr_coeff, upper = TRUE) %>%
   as.matrix %>% 
   pheatmap::pheatmap(., main = "Pearson correlation")
+
+# DESeq.rlog.subset <- subset(DESeq.rlog, rownames(DESeq.rlog) %in% genes)ds
+plotPCA(DESeq.rlog, intgroup = 'Diagnosis')
 ```
 
 We can also evaluate the similarity of samples with simple hierarchical clustering:
@@ -952,38 +966,6 @@ as.dist(1-rlog_corr_coeff) %>%
 
 From the heatmap and clustering results above, it does not seem like our patient samples are easily seperable by overall expression profiles. In order to ensure that our conditions truly do show different gene expression profiles, we will only select genes that were found to be differentially expressed between the conditions in the paper. We can convert our `ensemblID` s to Gene-Ontology format through the use of the `biomaRt` Bioconductor package.
 
-```{r, include = FALSE}
-library(biomaRt)
-
-study_selected_genes <- c('LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 'PTPRZ1', 'IGSF10', 'GRIA2', 'MEIS1', 'SELENBP1', 'SERPINF1', 'RIMS2', 'ASTN1', 'TLN2', 'ZNF532', 'ZNF662', 'NIN', 'ULK3', 'SLC38A7', 'FOXP1', 'ARSA', 'CTBP1-AS', 'LOC102725328', 'CBX6', 'GYPC', 'FBRSL1', 'SMAD7', 'PLXNC1', 'CLDN15', 'TSHZ3', 'KCNJ5', 'DPYD', 'STEAP3', 'RUNX3', 'PTPRG', 'ACD', 'TTYH3', 'LOC100133445', 'LOC102724549', 'VENTX', 'TM9SF1', 'SMIM3', 'ZNF703', 'TGFBI', 'EMP2', 'PSTPIP1', 'ZNF696', 'RFX2', 'APOE', 'ATOH8', 'ADAM8', 'GAS2L1', 'CHCHD5', 'ADAMTS13', 'A1BG', 'IL15', 'SECTM1', 'FAM109A', 'LOC100507639', 'ZNF843', 'S100A4', 'LSR')
-
-covered_gene_names <- 
-  DESeq.ds %>% 
-  rowData() %>% 
-  .$gene_name
-
-table(study_selected_genes %in% covered_gene_names) 
-
-# attributes <- c('ensembl_gene_id','ensembl_transcript_id','hgnc_symbol')
-
-
-# 
-# mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
-# 
-# attributes <- c('ensembl_gene_id','ensembl_transcript_id','hgnc_symbol')
-#   
-# 
-# ensembl_df <- 
-#   getBM(attributes=attributes, 
-#         filters="ensembl_gene_id",
-#         values=genes,
-#         mart=mart)
-# 
-# ensembl_df %>% 
-#   head() %>% 
-#   kable()
-```
-
 ```{r}
 ## Determine 1000 most variable genes
 genes <-
@@ -995,8 +977,6 @@ genes <-
 
 study_counts <- 
   rlog.norm.counts[rownames(rlog.norm.counts) %in% genes, ]
-
-
 
 new_names <- colnames(study_counts) %>% 
   sapply(function(run_name) 
@@ -1036,25 +1016,7 @@ as.dist(1-rlog_corr_coeff) %>%
 
 Now we see much more distict grouping between our clinical groups, a good sign for differential expression analysis down the line.
 
-### **PCA**
 
-Lastly, in order to determine the magnitude in the differences between our samples, we make use of Principle Components Analysis
-
-```{r}
-plotPCA(DESeq.rlog, intgroup = 'Diagnosis')
-```
-
-Again, we see performing PCA on all genes does not yield a large amount of seperation between our clinical groups. Below we perform the same analysis with the study-highlighted genes from before.
-
-**Gene-specific**
-
-```{r}
-DESeq.rlog.subset <- subset(DESeq.rlog, rownames(DESeq.rlog) %in% genes)
-
-plotPCA(DESeq.rlog.subset, intgroup = 'Diagnosis')
-```
-
-We now see a much clearer distinction between clinical groups.
 
 ### **Differential Expression Analysis**
 
@@ -1175,7 +1137,7 @@ diff_exp_df <-
 diff_exp_df %>% 
   filter(padj < 0.05) %>% 
   set_rownames(.$gene_name) %>% 
-  dplyr::select(-c(gene_name)) %>% 
+  select(-c(gene_name)) %>% 
   kable()
 ```
 
@@ -1183,6 +1145,22 @@ diff_exp_df %>%
 **Where do the study-selected genes fall in our differential expression table?**
 
 ```{r}
+study_selected_genes <- c(
+    'LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 
+    'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 
+    'PTPRZ1', 'IGSF10', 'GRIA2', 'MEIS1', 'SELENBP1', 
+    'SERPINF1', 'RIMS2', 'ASTN1', 'TLN2', 'ZNF532', 
+    'ZNF662', 'NIN', 'ULK3', 'SLC38A7', 'FOXP1', 'ARSA', 
+    'CTBP1-AS', 'LOC102725328', 'CBX6', 'GYPC', 'FBRSL1', 
+    'SMAD7', 'PLXNC1', 'CLDN15', 'TSHZ3', 'KCNJ5', 
+    'DPYD', 'STEAP3', 'RUNX3', 'PTPRG', 'ACD', 'TTYH3', 
+    'LOC100133445', 'LOC102724549', 'VENTX', 'TM9SF1', 
+    'SMIM3', 'ZNF703', 'TGFBI', 'EMP2', 'PSTPIP1', 
+    'ZNF696', 'RFX2', 'APOE', 'ATOH8', 'ADAM8', 'GAS2L1', 
+    'CHCHD5', 'ADAMTS13', 'A1BG', 'IL15', 'SECTM1', 
+    'FAM109A', 'LOC100507639', 'ZNF843', 'S100A4', 'LSR')
+
+
 diff_exp_df %>% 
   filter(gene_name %in% study_selected_genes) %>% 
   arrange(padj) %>% 
