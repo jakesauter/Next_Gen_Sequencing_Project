@@ -29,7 +29,6 @@ opts_chunk$set(echo = TRUE,
 ```
 
 ```{r, echo=FALSE}
-
 study_selected_genes <- c(
     'LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 
     'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 
@@ -47,7 +46,7 @@ study_selected_genes <- c(
 ```
 
 ```{r, echo=FALSE}
-study_selected_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.000041", "0.004718", "0.005319", 
+study_selected_genes_df <- structure(list(padj = c("0.000041", "0.000041", "0.004718", "0.005319", 
 "0.019995", "0.019995", "0.019995", "0.019995", "0.037131", "0.041758", 
 "0.042672", "0.044855", "0.048952", "0.048952", "0.059128", "0.059128", 
 "0.091389", "0.091389", "0.093845", "0.107681", "0.233903", "0.240712", 
@@ -56,7 +55,7 @@ study_selected_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.
 "0.446205", "0.461316", "0.504754", "0.508623", "0.510608", "0.539124", 
 "0.549781", "0.553558", "0.561052", "0.567129", "0.588293", "0.664548", 
 "0.701038", "0.735986", "0.827672", "0.828134", "0.878700", "0.886590", 
-"0.896340", "0.912330", "0.982388", "0.992804"), 'Log_2 Fold Change' = c(" 1.7407", 
+"0.896340", "0.912330", "0.982388", "0.992804"), log2FoldChange = c(" 1.7407", 
 " 1.6923", "-1.9188", " 2.4133", "-1.2752", "-1.7361", "-3.5340", 
 "-1.5115", " 2.5397", " 1.4381", "-1.8551", "-1.4818", " 1.5660", 
 "-1.8852", " 1.6870", "-1.5431", " 1.9729", " 1.5837", "-1.2515", 
@@ -78,9 +77,9 @@ study_selected_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.
 ```
 
 ```{r, echo=FALSE}
-study_confirmed_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.000041", "0.004718", "0.005319", 
+study_confirmed_genes_df <- structure(list(padj = c("0.000041", "0.000041", "0.004718", "0.005319", 
 "0.019995", "0.019995", "0.019995", "0.019995", "0.037131", "0.041758", 
-"0.042672", "0.044855", "0.048952", "0.048952"), 'Log_2 Fold Change' = c(" 1.74", 
+"0.042672", "0.044855", "0.048952", "0.048952"), log2FoldChange = c(" 1.74", 
 " 1.69", "-1.92", " 2.41", "-1.28", "-1.74", "-3.53", "-1.51", 
 " 2.54", " 1.44", "-1.86", "-1.48", " 1.57", "-1.89")), row.names = c("SERPINF1", 
 "CECR2", "TGFBI", "GLT1D1", "ARSA", "PTPRG", "S100A4", "APOE", 
@@ -88,13 +87,13 @@ study_confirmed_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0
 ```
 
 ```{r, echo=FALSE}
-my_de_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.000041", "0.004718", "0.005319", 
+my_de_genes_df <- structure(list(padj = c("0.000041", "0.000041", "0.004718", "0.005319", 
 "0.011051", "0.011338", "0.019995", "0.019995", "0.019995", "0.019995", 
 "0.019995", "0.019995", "0.019995", "0.035989", "0.037131", "0.037131", 
 "0.037131", "0.037131", "0.037131", "0.037131", "0.037131", "0.037131", 
 "0.041758", "0.041758", "0.042241", "0.042672", "0.042971", "0.044330", 
 "0.044855", "0.044855", "0.048952", "0.048952", "0.048952", "0.048952", 
-"0.048952", "0.048952", "0.048952", "0.048952"), 'Log_2 Fold Change' = c(" 1.74", 
+"0.048952", "0.048952", "0.048952", "0.048952"), log2FoldChange = c("1.74", 
 " 1.69", "-1.92", " 2.41", " 4.16", " 2.21", "-3.53", " 4.98", 
 "-1.74", " 4.22", " 4.52", "-1.51", "-1.28", " 3.28", " 5.31", 
 " 2.05", " 2.85", " 5.73", " 4.85", " 3.36", " 2.54", " 1.36", 
@@ -129,7 +128,7 @@ My aim specifically is to recapitulate the author's results, confirming that the
 
 # **Results**
 
-![](images/paste-B7115C2D.png){width="635"}
+![](images/final_volcano_plot.png){width="635"}
 
 Of the **25** literature-selected genes identified in this study, I have confirmed **14** to be differentially expressed. A table containing the confirmed genes with their multiple-testing corrected p-value as well as log_2 fold change of expression can be found below. An extended list of genes found to be differntially expressed in this report can be found in the [Differential Expression Analysis](### differential-expression-analysis) section of this report.
 
@@ -1464,7 +1463,7 @@ diff_exp_df %>%
 
 ```{r, echo = FALSE}
 diff_exp_df %>%
-  filter(gene_name %in% study_selected_genes, 
+  filter(gene_name %in% study_selected_genes,
          padj < 0.05) %>% 
   # picking top-pvalue ensmbl-gene for each
   # hgnc gene-symbol identified gene
@@ -1477,8 +1476,8 @@ diff_exp_df %>%
   arrange(padj) %>% 
   select(padj, log2FoldChange) %>% 
   mutate(padj = format(padj, digits = 2, scientific = FALSE), 
-         log2FoldChange = format(log2FoldChange, digits = 3)) %>%           
-  kable
+         log2FoldChange = format(log2FoldChange, digits = 3)) %>% 
+  kable()
 ```
 
 **Which genes have we confirmed from the study-selected genes to be differentially expressed?**
@@ -1486,7 +1485,7 @@ diff_exp_df %>%
 ```{r, echo = FALSE}
 diff_exp_df %>% 
   filter(gene_name %in% study_selected_genes, 
-         padj < 0.05) %>% 
+         padj < 0.05) %>%
   .$gene_name %>% unname()
 ```
 
