@@ -7,7 +7,7 @@ output:
     toc: true
     toc_float: true
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{=html}
@@ -26,6 +26,24 @@ opts_chunk$set(echo = TRUE,
                message = FALSE, 
                warning = FALSE, 
                comment = NA)
+```
+
+```{r, echo=FALSE}
+
+study_selected_genes <- c(
+    'LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 
+    'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 
+    'PTPRZ1', 'IGSF10', 'GRIA2', 'MEIS1', 'SELENBP1', 
+    'SERPINF1', 'RIMS2', 'ASTN1', 'TLN2', 'ZNF532', 
+    'ZNF662', 'NIN', 'ULK3', 'SLC38A7', 'FOXP1', 'ARSA', 
+    'CTBP1-AS', 'LOC102725328', 'CBX6', 'GYPC', 'FBRSL1', 
+    'SMAD7', 'PLXNC1', 'CLDN15', 'TSHZ3', 'KCNJ5', 
+    'DPYD', 'STEAP3', 'RUNX3', 'PTPRG', 'ACD', 'TTYH3', 
+    'LOC100133445', 'LOC102724549', 'VENTX', 'TM9SF1', 
+    'SMIM3', 'ZNF703', 'TGFBI', 'EMP2', 'PSTPIP1', 
+    'ZNF696', 'RFX2', 'APOE', 'ATOH8', 'ADAM8', 'GAS2L1', 
+    'CHCHD5', 'ADAMTS13', 'A1BG', 'IL15', 'SECTM1', 
+    'FAM109A', 'LOC100507639', 'ZNF843', 'S100A4', 'LSR')
 ```
 
 ```{r, echo=FALSE}
@@ -474,7 +492,7 @@ filter <- dplyr::filter
 select <- dplyr::select
 ```
 
-### **Importing `featureCounts` Data into `DESeq2`**
+### **Importing `featureCounts` Data**
 
 ```{r}
 read_counts <- read.table(
@@ -510,7 +528,7 @@ read_counts %>%
   kable()    
 ```
 
-### **Converting Ensembl IDs to Gene symbols using GTF**
+### **Converting Gene symbols using GTF**
 
 Now that we have the `read_counts` for all of our samples of interest, we can associate our known metadata with the genes, which can later be incorported into our `DESeq2` object's `rowData`. In order to associate these data, the gene information can first be read in the `gencode.v36.annotation.gtf.gz` file with `plyranger::read_gff`. 
 
@@ -611,7 +629,7 @@ DESeq.ds %>%
   kable()
 ```
 
-### **Read Mapping Quality Assessment**
+### **Mapping Quality Assessment**
 
 **Number of reads sequenced per sample**
 
@@ -637,7 +655,7 @@ DESeq.ds <- DESeq.ds[keep_genes, ]
 cat(n_previous_genes - nrow(DESeq.ds), 'genes removed due to no non-zero counts found')
 ```
 
-### **Normalizing read counts for Sequencing Depth and Gene Expression**
+### **Read Count Normalization**
 
 In order to properly compare our sampled RNA read counts across samples, we must normalize our raw RNA read counts for both the **sequencing depth** and **overall expression of other genes** for each sample. This can be accomplished by using `DESeq2`'s **size factor normalization**, performed with `estimateSizeFactors()` and accessed with `sizeFactors()`. This step is particularly important as it is the first step of the `DESeq2` differential expression analysis based on the Negative Binomial (Gamma-Poisson) distribution. More clearly, the full steps of the differential expression analysis will be 
 
@@ -882,7 +900,7 @@ p5 + p6
 p1 + p2
 ```
 
-### **Exploratory Data Analysis with `DESeq2::rlog`**
+### **Exploratory Data Analysis`**
 
 In order to briefly explore possible relationships and patterns in our data, such as confounding variables or strength of seperation between `Diagnosis`, we will apply `DESeq2::rlog` to the **raw count data**. The `rlog` function transforms the count data to the log2 scale, while also minimizing differences between samples for rows with small counts, and even normalizing with respect to library size ontop of that.
 
@@ -1005,7 +1023,7 @@ accession_table %>%
   facet_wrap(vars(Diagnosis))
 ```
 
-### **APOE Genotype as a Possible Confounder**
+### **APOE as a Possible Confounder**
 
 We note that **APOE genotype** may play a role in AD, though are not including it in the analysis in order to compare with the reference study ([APOE ε4: the most prevalent yet understudied risk factor for Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/25217293/)). Note that it was also better to not include APOE as `DESeq2` will have a problem processing the variable in the design formula as not every level is repsented in every group, observed below.
 
@@ -1053,7 +1071,7 @@ data.frame(x = c('Heatmap will all genes', 'PCA with all genes'),
 </style>
 ```
 
-```{r, fig.show='hold'}
+```{r, fig.show='hold', out.width='50%'}
 par(mfrow = c(2, 2))
 
 most_variable_genes <-
@@ -1099,7 +1117,9 @@ selected_genes_rlog_corr_coeff <-
 
 Now that we have our `rlog_corr_coeff` and `selected_genes_rlog_corr_coeff` variables, we can plot our results side-by-side below.
 
-```{r, fig.show='hold', out.width="50%"}
+```{r, fig.show='hold', out.width='50%'}
+par(mfrow = c(2,2))
+
 rlog_corr_coeff %>% 
   {as.dist(1-., upper = TRUE)} %>%
   as.matrix %>% 
@@ -1118,37 +1138,94 @@ DESeq.rlog %>%
   plotPCA(intgroup = 'sex')
 ```
 
-```{r, fig.show='hold', fig.height = 4, fig.width=10}
-
+```{r, fig.show='hold', fig.height = 4}
 par(mfrow = c(1, 2), 
-    mar = c(1, 3, 1, 3))
+    mar=c(0, 4, 4, 2))
+
 
 rlog_corr_coeff %>% 
   {as.dist(1-.)} %>% 
   hclust() %>%
   plot(., 
        main = "rlog transformed read counts", 
-       xlab = "", ylab = "")
+       xlab = "", ylab = "", sub = "")
 
 selected_genes_rlog_corr_coeff %>% 
   {as.dist(1-.)} %>% 
   hclust() %>%
   plot(., 
        main = "rlog transformed read counts", 
-       xlab = "",  ylab = "")
+       xlab = "",  ylab = "", sub = "")
 ```
 
-We now see a much clearer distinction between clinical groups.
+**Study-Selected, Literature Supported Specific Gene-Set**
 
-We don't see males and females clustering too closely together here, showing support that sex should not be a confounding factor moving forward.
+From the results above, it is unclear if our groups seperate by sex. In order to further determine if we should observe any differentially expressed genes between the sexes, we will only select gene features that were pointed out as literature supported in the reference study. This list is printed below as well for convenience
+
+```{r}
+study_selected_genes
+```
+
+Below we see that given the literature-supported genes, our Male and Female sex groups do seem to be seem to be the main source of seperation in our data, though some patterns may exist. Moving forward the difference in sex of our cohort should not ruin our differential expression analysis between Control and AD groups, though it may be bet to model as a confounding factor as I have in this report.
+
+```{r, echo = FALSE, fig.height=5}
+study_selected_gencode_ids <- 
+  data.frame(gene_id = study_selected_genes) %>% 
+  left_join(gene_info_df, by = c('gene_id' = 'gene_name')) %>% 
+  drop_na() %>% .$gencode_id
+  
+selected_genes_rlog_corr_coeff <- 
+  DESeq.rlog %>% 
+  subset(rownames(.)%in% study_selected_gencode_ids) %>% 
+  assay() %>% 
+  cor(method = "pearson") 
+
+orig_rownames <- rownames(selected_genes_rlog_corr_coeff)
+
+new_names <-
+  orig_rownames %>% 
+  sapply(function(run_name) 
+    accession_table[accession_table['Run'] == run_name, 'sex']) %>% 
+  {paste0(., '_', str_extract(names(.), '[0-9]{3}$'))}
+
+selected_genes_rlog_corr_coeff <- 
+  selected_genes_rlog_corr_coeff %>% 
+  set_rownames(new_names) %>% 
+  set_colnames(new_names)
+
+
+selected_genes_rlog_corr_coeff %>% 
+  {as.dist(1-.)} %>% 
+  hclust() %>%
+  plot(., 
+       main = "rlog transformed read counts", 
+       xlab = "",  ylab = "", sub = "")
+```
+
+
+```{r, echo = FALSE, fig.height = 5}
+selected_genes_rlog_corr_coeff %>% 
+  {as.dist(1-., upper = TRUE)} %>%
+  as.matrix %>% 
+  pheatmap::pheatmap(., main = "Pearson correlation")
+```
+
+
+```{r, echo = FALSE, fig.height = 3}
+DESeq.rlog %>%
+  subset(rownames(.)%in% study_selected_gencode_ids) %>% 
+  plotPCA(intgroup = 'sex')
+```
 
 ### **Control vs AD Group Analysis**
 
-**AD vs Control Correlation Heatmap** We can now generate the same Pearson correlation heatmap from above, though this time seperating by our true varible of interest: AD vs Control.
+**AD vs Control Correlation Heatmap**
+
+We can now generate the same Pearson correlation heatmap from above, though this time seperating by our true varible of interest: AD vs Control.
 
 column 1: all genes column 2: selected genes row 1: heatmap row 2: pca
 
-```{r, fig.show = 'hold'}
+```{r, fig.show = 'hold', fig.width = 10, out.width='50%'}
 par(mfrow = c(2, 2))
 
 rlog_corr_coeff <- 
@@ -1208,23 +1285,83 @@ DESeq.rlog %>%
   plotPCA(intgroup = 'sex')
 ```
 
-```{r, fig.show='hold', fig.height = 4, fig.width=10}
+```{r, fig.show='hold', fig.width=10}
 par(mfrow = c(1, 2), 
-    mar = c(1, 3, 1, 3))
+    mar=c(0, 4, 4, 2))
 
 rlog_corr_coeff %>% 
   {as.dist(1-.)} %>% 
   hclust() %>%
   plot(., 
        main = "rlog transformed read counts", 
-       xlab = "", ylab = "")
+       xlab = "", ylab = "", sub = "")
 
 selected_genes_rlog_corr_coeff %>% 
   {as.dist(1-.)} %>% 
   hclust() %>%
   plot(., 
        main = "rlog transformed read counts", 
-       xlab = "",  ylab = "")
+       xlab = "",  ylab = "", sub = "")
+```
+
+**Study-Selected, Literature Supported Specific Gene-Set**
+
+From the results above, it is unclear if our groups are seperable at all. In order to further determine if we should observe any differentially expressed genes, we will only select gene features that were pointed out as literature supported in the reference study. This list is printed below as well for convenience
+
+```{r}
+study_selected_genes
+```
+
+Below we see that given the literature-supported genes, our Control and AD groups do seem to be seperable, and group well by Diagnosis condition. This indicates that we probably should see some differentially expressed genes in the next section.
+
+
+```{r, echo = FALSE, fig.height = 5}
+study_selected_gencode_ids <- 
+  data.frame(gene_id = study_selected_genes) %>% 
+  left_join(gene_info_df, by = c('gene_id' = 'gene_name')) %>% 
+  drop_na() %>% .$gencode_id
+  
+selected_genes_rlog_corr_coeff <- 
+  DESeq.rlog %>% 
+  subset(rownames(.)%in% study_selected_gencode_ids) %>% 
+  assay() %>% 
+  cor(method = "pearson") 
+
+orig_rownames <- rownames(selected_genes_rlog_corr_coeff)
+
+new_names <-
+  orig_rownames %>% 
+  sapply(function(run_name) 
+    accession_table[accession_table['Run'] == run_name, 'Diagnosis']) %>% 
+  {paste0(., '_', str_extract(names(.), '[0-9]{3}$'))}
+
+selected_genes_rlog_corr_coeff <- 
+  selected_genes_rlog_corr_coeff %>% 
+  set_rownames(new_names) %>% 
+  set_colnames(new_names)
+
+par(mar=c(0, 4, 4, 2)) # c(bottom, left, top, right)
+
+selected_genes_rlog_corr_coeff %>% 
+  {as.dist(1-.)} %>% 
+  hclust() %>%
+  plot(., 
+       main = "rlog transformed read counts", 
+       xlab = "",  ylab = "", sub = "")
+```
+
+
+```{r, echo = FALSE, fig.height = 5}
+selected_genes_rlog_corr_coeff %>% 
+  {as.dist(1-., upper = TRUE)} %>%
+  as.matrix %>% 
+  pheatmap::pheatmap(., main = "Pearson correlation")
+```
+
+```{r, echo = FALSE, fig.height = 3}
+DESeq.rlog %>%
+  subset(rownames(.)%in% study_selected_gencode_ids) %>% 
+  plotPCA(intgroup = 'Diagnosis')
 ```
 
 
@@ -1242,77 +1379,36 @@ During this analysis, [this tutorial](https://dputhier.github.io/jgb71e-polytech
 
 As previously noted, the next step in performing our differential expression analysis on our read count set is to **estimate the gene-wise dispersion**, which represent the variance in gene expression for a given mean expression value. Note that this means information is shared accross genes of similar expression values in this step, as `DESeq2` is making the assumption that **genes with similar expression levels have similar dispersion**. Also note that the process executed below (`estimateDispersions()`) is an instance of Maximum Likelihood esimation of dispersion to the count data. The result that we see plotted below is a **red curve**, indicating the expected dispersion value for genes of a given expression strength. Each black dot bvelow is a gene with an associated man expression level and MLE of the dispersion.
 
-**Shrinking Dispersion**
+<!-- **Shrinking Dispersion** -->
 
-We next must shrink the gene-wise dispersion estimates towards our expected dispersion values fitted by the red line in the previous step. This is required as values closer to the curve allow for more accurate identification of differentially expressed genes when samples sizes are small. This step is particularly helpful for **removing false positives** in our differential expression analysis. A key aspect of this fitting / normalization process is that most genes are shrunken towards the curve, though **extremely high dispersion values are not shrunken towards the curve**, due to the likelihood that the observed dispersion does not follow the modelling assumptions and has the observed higher variability due to other biological or technical reasons. The gene values that have not been shrunken towards the curve to avoid false-positives are **circled in blue**. 
+<!-- We next must shrink the gene-wise dispersion estimates towards our expected dispersion values fitted by the red line in the previous step. This is required as values closer to the curve allow for more accurate identification of differentially expressed genes when samples sizes are small. This step is particularly helpful for **removing false positives** in our differential expression analysis. A key aspect of this fitting / normalization process is that most genes are shrunken towards the curve, though **extremely high dispersion values are not shrunken towards the curve**, due to the likelihood that the observed dispersion does not follow the modelling assumptions and has the observed higher variability due to other biological or technical reasons. The gene values that have not been shrunken towards the curve to avoid false-positives are **circled in blue**.  -->
 
 
 ```{r}
-dds.disp <- estimateDispersions(DESeq.ds)
-plotDispEsts(dds.disp)
+DESeq.ds <- estimateDispersions(DESeq.ds)
+plotDispEsts(DESeq.ds)
 ```
 
 
+From the plot we see above, our gene-dispersion model seems to be a good fit, and we can continue on with differential expression analysis.
 
 
+### **Negative Binomial Wald Test**
 
+We are now ready to actually peform the differential expression test. Below we apply the `nbinomWaldTest` to test the coefficients of a fit Negative Binomial GLM model against a normal distribution centered around 0. 
 
-```{r}
-# determine DE genes
-DESeq.ds <- DESeq(DESeq.ds)
+```{r, results='hide'}
+DESeq.ds <- nbinomWaldTest(DESeq.ds)
 
-DGE.results <-
-  results(DESeq.ds, # extract gene-wise metrics
+resultDESeq2 <-
+  results(DESeq.ds,
           independentFiltering = TRUE, 
           alpha = 0.05)
-
-
-# shrink logFC values
-DGE.results <-
-  lfcShrink(DESeq.ds, 
-            coef = "Diagnosis_AD_vs_Control", 
-            res = DGE.results,
-            # BiocManager::install('apeglm')
-            type = "apeglm")
-
-DGEgenes <- 
-  DGE.results %>% 
-  subset(padj < 0.05) %>% 
-  rownames()
-
-head(DGEgenes)
 ```
 
+**Distriubtion of Resultant P-values**
 
-
-
-
-```{r}
-waldTestResult <- nbinomWaldTest(dds.disp)
-
-resultDESeq2 <- 
-          results(waldTestResult,
-                   alpha = 0.05, 
-                   pAdjustMethod="BH")
-
-ensembl_id_to_gene_symbol <- 
-  function(ensembl_id) {
-    gene_info_df %>% 
-      .[.$gencode_id == ensembl_id, 
-        'gene_name'] 
-  }
-
-
-resultDESeq2 %>% 
-  .[order(.$padj), ] %>% 
-  head() %>% 
-  set_rownames(sapply(rownames(.), 
-                      ensembl_id_to_gene_symbol)) %>% 
-  kable()
-
-```
-
-```{r, fig.width=10}
+```{r, fig.width=10, echo = FALSE}
 p1 <- resultDESeq2 %>% 
   as.data.frame() %>% 
   filter(padj <= 0.99) %>% 
@@ -1338,7 +1434,16 @@ p2 <- resultDESeq2 %>%
 p1 + p2
 ```
 
-```{r}
+**Genes Found to be Differentially Expressed**
+
+```{r, echo = FALSE}
+ensembl_id_to_gene_symbol <- 
+  function(ensembl_id) {
+    gene_info_df %>% 
+      .[.$gencode_id == ensembl_id, 
+        'gene_name'] 
+  }
+
 diff_exp_df <- 
   resultDESeq2 %>% 
   as.data.frame() %>% 
@@ -1357,23 +1462,7 @@ diff_exp_df %>%
 
 **Where do the study-selected genes fall in our differential expression table?**
 
-```{r}
-study_selected_genes <- c(
-    'LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 
-    'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 
-    'PTPRZ1', 'IGSF10', 'GRIA2', 'MEIS1', 'SELENBP1', 
-    'SERPINF1', 'RIMS2', 'ASTN1', 'TLN2', 'ZNF532', 
-    'ZNF662', 'NIN', 'ULK3', 'SLC38A7', 'FOXP1', 'ARSA', 
-    'CTBP1-AS', 'LOC102725328', 'CBX6', 'GYPC', 'FBRSL1', 
-    'SMAD7', 'PLXNC1', 'CLDN15', 'TSHZ3', 'KCNJ5', 
-    'DPYD', 'STEAP3', 'RUNX3', 'PTPRG', 'ACD', 'TTYH3', 
-    'LOC100133445', 'LOC102724549', 'VENTX', 'TM9SF1', 
-    'SMIM3', 'ZNF703', 'TGFBI', 'EMP2', 'PSTPIP1', 
-    'ZNF696', 'RFX2', 'APOE', 'ATOH8', 'ADAM8', 'GAS2L1', 
-    'CHCHD5', 'ADAMTS13', 'A1BG', 'IL15', 'SECTM1', 
-    'FAM109A', 'LOC100507639', 'ZNF843', 'S100A4', 'LSR')
-
-
+```{r, echo = FALSE}
 diff_exp_df %>%
   filter(gene_name %in% study_selected_genes, 
          padj < 0.05) %>% 
@@ -1394,12 +1483,15 @@ diff_exp_df %>%
 
 **Which genes have we confirmed from the study-selected genes to be differentially expressed?**
 
-```{r}
+```{r, echo = FALSE}
 diff_exp_df %>% 
   filter(gene_name %in% study_selected_genes, 
          padj < 0.05) %>% 
   .$gene_name %>% unname()
 ```
+
+
+### **Volcano Plot Summarizing Results**
 
 ```{r, fig.width=11, fig.height=8}
 alpha <- 0.05
@@ -1460,19 +1552,19 @@ A brief description/list of issues/problems/limitations you encountered along th
 ## **Key Datasets Generated**
 
 ```{r, echo=FALSE}
-data.frame(Dataset_Name = c('Dataset 1', 
+data.frame('Dataset Name' = c('Dataset 1', 
                             'Dataset 2', 
                             'Dataset 3', 
                             'Dataset 4'), 
-           Generated_By = c('TrimGalore', 
+           'Generated By' = c('TrimGalore', 
                             'STAR', 
                             'featureCounts', 
                             'DESeq2'), 
-           Dataset_Type = c('Trimmed Reads', 
+           'Dataset Type' = c('Trimmed Reads', 
                             'Aligned Samples', 
                             'featureCounts', 
                             'Differentially Expressed Genes'), 
-           Description = c('Description 1', 
+           'Description' = c('Description 1', 
                            'Description 2', 
                            'Description 3', 
                            'Description 4')) %>% 
