@@ -6,7 +6,6 @@ output:
   html_document: 
     toc: true
     toc_float: true
-    toc_depth: 2
 editor_options: 
   chunk_output_type: inline
 ---
@@ -152,7 +151,7 @@ Another brief paragraph summarizing:
 
 Information the `fastq` files used in this study can be found [here](https://www.ncbi.nlm.nih.gov/Traces/study/?page=3&acc=PRJNA515044&o=diagnosis_sam_s%3Ad%253Bacc_s%3Bacc_s%3Aa) as well as [NCBI GEO](https://www.ncbi.nlm.nih.gov//geo/query/acc.cgi?acc=GSE125050)
 
-### **Downloading Myeloid/Microglia Data**
+### **Downloading Myeloid Data**
 
 For this analysis, I have chosen to proceed with one of the four available cell types, being **myeloid** / microglia cells. However, the script below can be easily be adapted to download all `cell_types` with a simple `for` loop.
 
@@ -295,8 +294,6 @@ featureCounts \
 ### **Data Processing Script**
 
 In the script below, once all of the files are trimmed and saved, `FastQC` (paired with `multiqc` aggregation) is used to facilitate sequence quality control.
-
-**Script for data processing:**
 
 ```{bash, eval=FALSE}
 #!/bin/bash 
@@ -455,8 +452,6 @@ We will keep these QC issues in mind moving forward, and remove the samples befo
 
 ## **Data Analysis**
 
-### **`DESeq2` Analysis of `featureCounts` Results**
-
 Below we will use the `DESeq2` R package to make a `DESeqDataSet` from our resultant files from running featureCounts. At this step, I have chosen to remove our **4** samples with QC issues after preliminary analysis, as well as another **4** samples for having an undefined value (`NA`) for the **sex** attribute, a possible confounder analyzed in this report.
 
 **Required Libraries**:
@@ -479,7 +474,7 @@ filter <- dplyr::filter
 select <- dplyr::select
 ```
 
-**Importing `featureCounts` Data into `DESeq2`**
+### **Importing `featureCounts` Data into `DESeq2`**
 
 ```{r}
 read_counts <- read.table(
@@ -494,6 +489,8 @@ read_counts <- as.matrix(read_counts)
 ```
 
 **Filtering failed QC Samples**
+
+We will now filter the samples previously seen to have low-quality aspects that have the possiblity of adding unnecessary noise to our analyses. The samples  `SRR8440524`, `SRR8440538`, and `SRR8440539` will be removed due to cyclic gc-content findings,  `SRR8440463` will be removed due to GC-rich contamination, and finally `SRR8440447` and `SRR8440517` will be removed due to unkown sex of the sample (a possible confounder).
 
 ```{r}
 keep_samples <- 
@@ -513,13 +510,11 @@ read_counts %>%
   kable()    
 ```
 
-**Converting gene count Ensembl IDs to cannoncical gene names using gene-data from gtf files**
+### **Converting Ensembl IDs to Gene symbols using GTF**
 
-**NOTE**: Below we are filtering for only protein-coding genes for proper size-factor normalization results, though
+Now that we have the `read_counts` for all of our samples of interest, we can associate our known metadata with the genes, which can later be incorported into our `DESeq2` object's `rowData`. In order to associate these data, the gene information can first be read in the `gencode.v36.annotation.gtf.gz` file with `plyranger::read_gff`. 
 
-**NOTE** : Some gencode ids map to the same gene symbol
-
-**TODO**: Peform parallel analysis for long-non-coding RNAs or incoroporate into this analysis?
+Seen later in this report, I will be filtering for only **protein-coding genes**, as well as **Non-Mitochondrial RNA** in order to achieve proper cross-sample normalization results. This result is acheived through filtering the `data.frame` derived from the GTF gene info file, followd by a `left_join` on the row names of our gene count information with the associated gene symbol.
 
 ```{r}
 genes_df <- 
@@ -528,17 +523,12 @@ genes_df <-
   select(gene_id, gene_type, gene_name) %>% 
   as.data.frame()
 
-
 gene_info_df <-
   data.frame(gencode_id = rownames(read_counts)) %>% 
   left_join(., genes_df, 
             by = c('gencode_id' = 'gene_id')) %>% 
   select(gencode_id, gene_name, gene_type) %>% 
-  filter(#not(gene_type %in% c('lncRNA', 'Mt_rRNA', 'Mt_tRNA')), 
-         # TODO: going to move forward with only protein coding genes
-         #      genes for now as long-non-coding RNAs and MT-rna
-         #      seem to really be messing up my sizefactor normalization
-         gene_type == 'protein_coding',
+  filter(gene_type == 'protein_coding',
          !str_detect(gene_name, '^MT-')) %>%
   distinct() 
 
@@ -546,9 +536,9 @@ read_counts <-
   read_counts[gene_info_df$gencode_id, ]
 ```
 
-**Filtering mitochondrial reads**
+### **Importing Sample Data**
 
-Now that we have our raw read counts, lets gather information about our samples to supply to the `colData` parameter of `DESeqDataSetFromMatrix`.
+Now that we have our raw read counts and `rowData` metadata, lets gather information about our samples to supply to the `colData` of `DESeq2` object.
 
 ```{r}
 accession_table <-
@@ -568,17 +558,22 @@ accession_table %>%
 
 From this accession table, we can map our accession ids to any clinical variable we like, such as `Diagnosis`, which is our main experimental group condition in this analysis. `Diagnosis` in our case tells us whether or not the diseased patient showed signs of Alzheimer's disease or not (control).
 
+
+### **Creating DESeq2 Object**
+
 ```{r}
-conditions <- 
+conditions <-
   colnames(read_counts) %>% 
   lapply(function(run_name) 
       accession_table[accession_table['Run'] == run_name, ]) %>% 
-  bind_rows() 
-
+  bind_rows() %>% 
+  mutate(sex = factor(sex), 
+         Diagnosis = factor(Diagnosis,
+                            levels = c('Control', 'AD')))
 
 sample_info <-
   DataFrame(conditions,
-            row.names = conditions$Run)
+            row.names = conditions$Run) 
 
 
 DESeq.ds <- 
@@ -587,14 +582,28 @@ DESeq.ds <-
     colData = sample_info,
     rowData = gene_info_df, 
     design = ~ sex + Diagnosis)
+```
 
+Lets inspect our `rowData`, `colData`, and `counts` attributes that we have provided to our new object.
+
+**colData**
+```{r, echo=FALSE}
 DESeq.ds %>% 
   colData() %>% 
   head() %>% 
   kable()
 ```
 
-```{r}
+**rowData**
+```{r, echo=FALSE}
+DESeq.ds %>% 
+  rowData() %>% 
+  head() %>% 
+  kable()
+```
+
+**counts**
+```{r, echo=FALSE}
 DESeq.ds %>% 
   counts() %>% 
   head() %>% 
@@ -602,9 +611,11 @@ DESeq.ds %>%
   kable()
 ```
 
-**Read Mapping Quality Assessment**
+### **Read Mapping Quality Assessment**
 
 **Number of reads sequenced per sample**
+
+In order to determine useful characteristics about our sample read mappings to inform proper normalization, we can begin by inspecting how many reads we have aquired per sample.
 
 ```{r}
 colSums(counts(DESeq.ds)) %>% 
@@ -613,6 +624,8 @@ colSums(counts(DESeq.ds)) %>%
   geom_col(aes(x = sample, y = reads)) + 
   theme(axis.text.x = element_text(angle=-35))
 ```
+
+**Filtering Gene Counts**
 
 Moving forward, we will filter our `DESeqDataSet` as to only include genes that have a read mapped for at least one sample.
 
@@ -624,7 +637,13 @@ DESeq.ds <- DESeq.ds[keep_genes, ]
 cat(n_previous_genes - nrow(DESeq.ds), 'genes removed due to no non-zero counts found')
 ```
 
-**Normalizing read counts for Sequencing Depth**
+### **Normalizing read counts for Sequencing Depth and Gene Expression**
+
+In order to properly compare our sampled RNA read counts across samples, we must normalize our raw RNA read counts for both the **sequencing depth** and **overall expression of other genes** for each sample. This can be accomplished by using `DESeq2`'s **size factor normalization**, performed with `estimateSizeFactors()` and accessed with `sizeFactors()`. This step is particularly important as it is the first step of the `DESeq2` differential expression analysis based on the Negative Binomial (Gamma-Poisson) distribution. More clearly, the full steps of the differential expression analysis will be 
+
+1. Estimation of the size factors with `DESeq2::estimateSizeFactors()`
+2. Estimation of the dispersion with `DESeq2::esimateDispersions()`
+3. Fitting the Negative Binomial GLM model, Wald statistics, and p-values with `nbinomWaldTest`
 
 ```{r}
 DESeq.ds <- estimateSizeFactors(DESeq.ds)
@@ -633,7 +652,7 @@ plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)),
      ylab = 'library sizes', xlab = 'size factors')
 ```
 
-From the plot above, we can see that our key necessary assumption that \*size factors should be around 1 and scale with number of reads per sample\*\* is met. However, this was not originally the case before some data filtering.
+From the plot above, we can see that our key necessary assumptions that size factors should be around 1 and scale with number of reads per sample is met. However, this was not originally the case before some data filtering. See below the results of size factor normalization performed with no reads filtered, mitochondrial RNA reads filtered, and non-protein coding and mitochondrial RNA read filtered respectively.
 
 ```{r, echo = FALSE, fig.width = 10}
 par(mfrow = c(1, 3))
@@ -751,6 +770,11 @@ plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)),
      main = 'Filtering Mitochondrial and Non-Protein Coding')
 ```
 
+
+**Normalizing Read Counts with Size Factors**
+
+In the previous step, we have calculated the `sizeFactors` of our samples, and confirmed that the results match required expectaions. Now we can use this result in order to properly normalize our samples. This is accomplished with the `DESeq2::counts()` accessor, with added paramter `normalized = TRUE`. Below we compare the filtered but non-normalized RNA read counts, with the filtered and normalized read counts.
+
 ```{r, fig.width = 10}
 p1 <-
   DESeq.ds %>% 
@@ -784,11 +808,11 @@ p2 <-
 p1 + p2
 ```
 
-Again, this section has influenced the filtering I have applied
+I would again like to show how the result of this normalization procedure has influenced the gene-filtering I have applied in previous step of the report. Below I show the results of the same normalization procedure as above, however with no gene filtering, Mitochondrial RNA filtering, and non-protein coding and Mitochondrial RNA filtering respectived.
 
 **No Gene Filtering Applied**
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.height = 2.5}
 p3 <-
   DESeq.ds.raw_1 %>% 
   counts() %>% 
@@ -799,8 +823,7 @@ p3 <-
   mutate(name = str_extract(name, '[0-9]{3}$')) %>% 
   ggplot() + 
     geom_boxplot(aes(x = name, y = value)) +
-    ggtitle("Non-normalized read counts") +
-    xlab('Sample') + ylab("log2(read counts + 1)") + 
+    xlab('Non-normalized read counts') + ylab("log2(read counts + 1)") + 
     theme(axis.text.x = element_text(angle = -30))
 
 
@@ -814,16 +837,15 @@ p4 <-
   mutate(name = str_extract(name, '[0-9]{3}$')) %>% 
   ggplot() + 
     geom_boxplot(aes(x = name, y = value)) +
-    ggtitle("Size-factor-normalized read counts") +
-    xlab('Sample') + ylab("log2(read counts + 1)") + 
+    xlab("Size-factor-normalized read counts") + ylab("log2(read counts + 1)") + 
     theme(axis.text.x = element_text(angle = -30))
 
 p3 + p4
 ```
 
-**Mitchondrial Gene Filtering Applied**
+**Mitchondrial RNA Filtering Applied**
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.height = 2.5}
 p5 <-
   DESeq.ds.raw_2 %>% 
   counts() %>% 
@@ -834,8 +856,7 @@ p5 <-
   mutate(name = str_extract(name, '[0-9]{3}$')) %>% 
   ggplot() + 
     geom_boxplot(aes(x = name, y = value)) +
-    ggtitle("Non-normalized read counts") +
-    xlab('Sample') + ylab("log2(read counts + 1)") + 
+    xlab("Non-normalized read counts") + ylab("log2(read counts + 1)") + 
     theme(axis.text.x = element_text(angle = -30))
 
 
@@ -849,20 +870,27 @@ p6 <-
   mutate(name = str_extract(name, '[0-9]{3}$')) %>% 
   ggplot() + 
     geom_boxplot(aes(x = name, y = value)) +
-    ggtitle("Size-factor-normalized read counts") +
-    xlab('Sample') + ylab("log2(read counts + 1)") + 
+    xlab("Size-factor-normalized read counts") + ylab("log2(read counts + 1)") + 
     theme(axis.text.x = element_text(angle = -30))
 
 p5 + p6
 ```
 
-**Mitchondrial and Non Protein-Coding Filtering Applied**
+**Mitchondrial RNA and Non Protein-Coding Filtering Applied**
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.height = 2.5}
 p1 + p2
 ```
 
-```{r}
+### **Exploratory Data Analysis with `DESeq2::rlog`**
+
+In order to briefly explore possible relationships and patterns in our data, such as confounding variables or strength of seperation between `Diagnosis`, we will apply `DESeq2::rlog` to the **raw count data**. The `rlog` function transforms the count data to the log2 scale, while also minimizing differences between samples for rows with small counts, and even normalizing with respect to library size ontop of that.
+
+Note that in the previous section, we observed the `sizeFactors()`, resulting from **size factor normalization** that will be used for the **differential expression analysis**, however `rlog` normalized data will be used stricty for **exploratory data analysis** in this section of the report, before we return to the `DESeq2` driven differential expression analysis in the next sections.
+
+Below we apply `DESeq2::rlog()` to the filtered `DESeq2` object that we have created previously, and plot the normaliztion results for matched gene-expression between two pairs of matched samples of which had an observable difference in raw read count numbers.
+
+```{r, fig.width = 10, fig.height = 5}
 DESeq.rlog <- rlog(DESeq.ds, blind = TRUE)
 
 log.norm.counts <-
@@ -873,38 +901,61 @@ log.norm.counts <-
 
 
 p1 <-
-  data.frame('SRR8440518' = log.norm.counts[,'SRR8440518'], 
-           'SRR8440529' = log.norm.counts[,'SRR8440529']) %>% 
+  data.frame('Female_Control_518' = log.norm.counts[,'SRR8440518'], 
+           'Female_Control_529' = log.norm.counts[,'SRR8440529']) %>% 
   ggplot() + 
-  geom_point(aes(x = SRR8440518, y = SRR8440529), 
+  geom_point(aes(x = Female_Control_518, y = Female_Control_529), 
              alpha = 0.01) + 
   geom_abline(slope = 1, intercept = 0, 
               lty = 2, col = 'red') + 
   ggtitle("size factor and log2-transformed") + 
-  xlab('SRR8440518') + ylab('SRR8440529')
+  xlab('Female_Control_518') + ylab('Female_Control_529')
 
 ## the rlog-transformed counts are stored in the accessor "assay"
 p2 <-
-  data.frame('SRR8440518' = assay(DESeq.rlog)[,'SRR8440518'], 
-           'SRR8440529' = assay(DESeq.rlog)[,'SRR8440529']) %>% 
+  data.frame('Female_Control_518' = assay(DESeq.rlog)[,'SRR8440518'], 
+           'Female_Control_529' = assay(DESeq.rlog)[,'SRR8440529']) %>% 
   ggplot() + 
-  geom_point(aes(x = SRR8440518, y = SRR8440529), 
+  geom_point(aes(x = Female_Control_518, y = Female_Control_529), 
              alpha = 0.01) + 
   geom_abline(slope = 1, intercept = 0, 
               lty = 2, col = 'red') + 
   ggtitle("rlog transformed") + 
-  xlab('SRR8440518') + ylab('SRR8440529') 
+  xlab('Female_Control_518') + ylab('Female_Control_529') 
+
+p3 <-
+  data.frame('Male_AD_477' = log.norm.counts[,'SRR8440477'], 
+           'Male_AD_486' = log.norm.counts[,'SRR8440486']) %>% 
+  ggplot() + 
+  geom_point(aes(x = Male_AD_477, y = Male_AD_486), 
+             alpha = 0.01) + 
+  geom_abline(slope = 1, intercept = 0, 
+              lty = 2, col = 'red') + 
+  ggtitle("size factor and log2-transformed") + 
+  xlab('Male_AD_477') + ylab('Male_AD_486')
+
+## the rlog-transformed counts are stored in the accessor "assay"
+p4 <-
+  data.frame('Male_AD_477' = assay(DESeq.rlog)[,'SRR8440477'], 
+           'Male_AD_486' = assay(DESeq.rlog)[,'SRR8440486']) %>% 
+  ggplot() + 
+  geom_point(aes(x = Male_AD_477, y = Male_AD_486), 
+             alpha = 0.01) + 
+  geom_abline(slope = 1, intercept = 0, 
+              lty = 2, col = 'red') + 
+  ggtitle("rlog transformed") + 
+  xlab('Male_AD_477') + ylab('Male_AD_486') 
 
 
-p1 + p2
 
+(p1 + p2) / (p3 + p4)
 ```
 
 **Mean vs Stdev before and after `rlog`**
 
-```{r}
-par(mfrow = c(1, 2))
+Another aspect of the normalized data that we can inspect is the relationship between the **mean** and **standard deviation** of our read counts. Due to the nature of sampled data, we will see that standard deviation will be higher for lowly expressed genes, and vice versa. This can make it difficult to compare these lowly expressed genes between samples. We see that the resultant `rlog` normalized data on the right below has a much better overall mean vs sd relationship. 
 
+```{r, fig.width = 10}
 log.norm.counts <- 
   DESeq.ds %>% 
   counts(normalized=TRUE) %>% 
@@ -916,7 +967,7 @@ msd_plot <-
   vsn::meanSdPlot(log.norm.counts,
                   ranks=FALSE, 
                   plot=FALSE)
-msd_plot$gg + 
+p1 <- msd_plot$gg + 
   ggtitle("Sequencing depth normalized log2(read counts)") + 
   ylab("standard deviation")
 
@@ -929,36 +980,46 @@ msd_plot <-
                   ranks=FALSE, 
                   plot = FALSE)
 
-msd_plot$gg + 
+p2 <- msd_plot$gg + 
   ggtitle("rlog transformation") + 
   coord_cartesian(ylim = c(0,3))
+
+p1 + p2
 ```
 
-### **Possible Confounders**
+### **PMI as a Possible Confounder**
+
+We first note that the [original publication](https://pubmed.ncbi.nlm.nih.gov/32610143/) has already chosen samples in attempts to minimize intra-group variation. 
 
 > <font size=2.5> To maximize the likelihood of observing differences between AD and control, we selectedonly AD specimens with high scores for amyloid and tau neuro-pathology in frontal cortex, and we selected only control specimens with negligible amounts of these pathologies in this region (see sample metadata in Data S2). AD and control groups had roughly matching distributions of age, sex, and post-mortem interval (PMI). <font>
 
--- [Alzheimer's Patient Microglia Exhibit Enhanced Aging and Unique Transcriptional Activation](https://pubmed.ncbi.nlm.nih.gov/32610143/)
 
--   **APOE**:
+**P**ost-**M**ortem-**I**nterval, being the time since death that the sample was processed was not found in the original publication to be required to be modelled as a covariate between AD and Control samples, however for peace of mind we also see that PMI is fairly evenly distributed between the two groups.
 
--- [What APOE Means for Your Health](https://www.alzdiscovery.org/cognitive-vitality/blog/what-apoe-means-for-your-health#ref-2)
-
-> <font size=2.5> There are three types of the APOE gene, called alleles: APOE2, E3 and E4. Everyone has two copies of the gene and the combination determines your APOE "genotype"---E2/E2, E2/E3, E2/E4, E3/E3, E3/E4, or E4/E4. The E2 allele is the rarest form of APOE and carrying even one copy appears to reduce the risk of developing Alzheimer's by up to 40%. APOE3 is the most common allele and doesn't seem to influence risk. The APOE4 allele, present in approximately 10-15% of people, increases the risk for Alzheimer's and lowers the age of onset. Having one copy of E4 (E3/E4) can increase your risk by 2 to 3 times while two copies (E4/E4) can increase the risk by 12 times [2]. </font>
-
--   **Post-Mortem Interval (PMI)** --
-
--   **Expired Age**
-
-```{r}
-# TODO: histograms p1 + p2 with 
-# p1 = histogram of age in controls 
-# p2 = histogram of age in AD 
+```{r, fig.height=2.5}
+accession_table %>% 
+  ggplot() + 
+    geom_histogram(aes(x = pmi), 
+                   color = 'black', 
+                   fill = 'skyblue') + 
+  facet_wrap(vars(Diagnosis))
 ```
 
--   **Sex**
+### **APOE Genotype as a Possible Confounder**
 
-**Male vs Female Counfounding Analysis**
+We note that **APOE genotype** may play a role in AD, though are not including it in the analysis in order to compare with the reference study ([APOE ε4: the most prevalent yet understudied risk factor for Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/25217293/)). Note that it was also better to not include APOE as `DESeq2` will have a problem processing the variable in the design formula as not every level is repsented in every group, observed below.
+
+```{r, fig.height = 2.5}
+accession_table %>% 
+  dplyr::count(Diagnosis, APOE) %>% 
+  ggplot() + 
+    geom_col(aes(x = APOE, y = n), 
+                   color = 'black', 
+                   fill = 'skyblue') + 
+  facet_wrap(vars(Diagnosis))
+```
+
+### **Sex as a Possible Counfounder**
 
 First in order to check that there isn't large differences between our male and female patient cohorts, we will generate a correlation heatmap using Pearson correlation.
 
@@ -973,6 +1034,8 @@ The table you will see below will be in the following format
 }
 </style>
 ```
+
+
 ```{r, echo=FALSE}
 data.frame(x = c('Heatmap will all genes', 'PCA with all genes'), 
            y = c('Heatmap with selected genes', 'PCA with selected genes')) %>% 
@@ -989,7 +1052,8 @@ data.frame(x = c('Heatmap will all genes', 'PCA with all genes'),
 }
 </style>
 ```
-```{r}
+
+```{r, fig.show='hold'}
 par(mfrow = c(2, 2))
 
 most_variable_genes <-
@@ -1084,7 +1148,7 @@ We don't see males and females clustering too closely together here, showing sup
 
 column 1: all genes column 2: selected genes row 1: heatmap row 2: pca
 
-```{r}
+```{r, fig.show = 'hold'}
 par(mfrow = c(2, 2))
 
 rlog_corr_coeff <- 
@@ -1124,6 +1188,8 @@ selected_genes_rlog_corr_coeff <-
 Now that we have our `rlog_corr_coeff` and `selected_genes_rlog_corr_coeff` variables, we can plot our results side-by-side below.
 
 ```{r, fig.show='hold', out.width="50%"}
+par(mfrow = c(1, 2))
+
 rlog_corr_coeff %>% 
   {as.dist(1-., upper = TRUE)} %>%
   as.matrix %>% 
@@ -1143,7 +1209,6 @@ DESeq.rlog %>%
 ```
 
 ```{r, fig.show='hold', fig.height = 4, fig.width=10}
-
 par(mfrow = c(1, 2), 
     mar = c(1, 3, 1, 3))
 
@@ -1162,9 +1227,35 @@ selected_genes_rlog_corr_coeff %>%
        xlab = "",  ylab = "")
 ```
 
-### **Differential Expression Analysis**
 
-[Good DESeq2 differential expression tutorial](https://dputhier.github.io/jgb71e-polytech-bioinfo-app/practical/rna-seq_R/rnaseq_diff_Snf2.html)
+## **Differential Expression Analysis**
+
+We will now continue with the differential expression analysis that we have already begun by esimtating our size factors. To remind the reader, the steps we must take to successfully complete a `DESeq2` differential expression analysis are the following: 
+
+1. Estimation of the size factors with `DESeq2::estimateSizeFactors()`
+2. Estimation of the dispersion with `DESeq2::esimateDispersions()`
+3. Fitting the Negative Binomial GLM model, Wald statistics, and p-values with `nbinomWaldTest`
+
+During this analysis, [this tutorial](https://dputhier.github.io/jgb71e-polytech-bioinfo-app/practical/rna-seq_R/rnaseq_diff_Snf2.html) from  from Nicolas Terrapon, Denis Puthier and Jacques van Helden, as well as [this tutorial on differential expression analysis ](https://hbctraining.github.io/DGE_workshop/lessons/04_DGE_DESeq2_analysis.html) and [this tutorial on the Wald Test](https://hbctraining.github.io/DGE_workshop_salmon_online/lessons/05b_wald_test_results.html) from the Harvard Chan Bioinformatics Core have served as an excellent reference material.
+
+### **Estimating Dispersion**
+
+As previously noted, the next step in performing our differential expression analysis on our read count set is to **estimate the gene-wise dispersion**, which represent the variance in gene expression for a given mean expression value. Note that this means information is shared accross genes of similar expression values in this step, as `DESeq2` is making the assumption that **genes with similar expression levels have similar dispersion**. Also note that the process executed below (`estimateDispersions()`) is an instance of Maximum Likelihood esimation of dispersion to the count data. The result that we see plotted below is a **red curve**, indicating the expected dispersion value for genes of a given expression strength. Each black dot bvelow is a gene with an associated man expression level and MLE of the dispersion.
+
+**Shrinking Dispersion**
+
+We next must shrink the gene-wise dispersion estimates towards our expected dispersion values fitted by the red line in the previous step. This is required as values closer to the curve allow for more accurate identification of differentially expressed genes when samples sizes are small. This step is particularly helpful for **removing false positives** in our differential expression analysis. A key aspect of this fitting / normalization process is that most genes are shrunken towards the curve, though **extremely high dispersion values are not shrunken towards the curve**, due to the likelihood that the observed dispersion does not follow the modelling assumptions and has the observed higher variability due to other biological or technical reasons. The gene values that have not been shrunken towards the curve to avoid false-positives are **circled in blue**. 
+
+
+```{r}
+dds.disp <- estimateDispersions(DESeq.ds)
+plotDispEsts(dds.disp)
+```
+
+
+
+
+
 
 ```{r}
 # determine DE genes
@@ -1176,11 +1267,10 @@ DGE.results <-
           alpha = 0.05)
 
 
-
 # shrink logFC values
 DGE.results <-
   lfcShrink(DESeq.ds, 
-            coef = "Diagnosis_Control_vs_AD", 
+            coef = "Diagnosis_AD_vs_Control", 
             res = DGE.results,
             # BiocManager::install('apeglm')
             type = "apeglm")
@@ -1193,14 +1283,9 @@ DGEgenes <-
 head(DGEgenes)
 ```
 
-```{r}
-dds.disp <- estimateDispersions(DESeq.ds)
-plotDispEsts(dds.disp)
-```
 
-[A great resource about how to interpret this plot](https://hbctraining.github.io/DGE_workshop/lessons/04_DGE_DESeq2_analysis.html)
 
-We see that there
+
 
 ```{r}
 waldTestResult <- nbinomWaldTest(dds.disp)
@@ -1363,7 +1448,6 @@ if (length(labels) > 0) {
 }
 ```
 
-**Results**
 
 # **Discussion**
 
