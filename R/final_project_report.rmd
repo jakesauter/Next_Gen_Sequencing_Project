@@ -21,60 +21,104 @@ editor_options:
 </style>
 ```
 
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, 
-                      message = FALSE, 
-                      warning = FALSE, 
-                      comment = NA)
+library(knitr)
+opts_chunk$set(echo = TRUE, 
+               message = FALSE, 
+               warning = FALSE, 
+               comment = NA)
 ```
+
+```{r, echo=FALSE}
+study_selected_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.000041", "0.004718", "0.005319", 
+"0.019995", "0.019995", "0.019995", "0.019995", "0.037131", "0.041758", 
+"0.042672", "0.044855", "0.048952", "0.048952", "0.059128", "0.059128", 
+"0.091389", "0.091389", "0.093845", "0.107681", "0.233903", "0.240712", 
+"0.240922", "0.240922", "0.272270", "0.302060", "0.351846", "0.361383", 
+"0.365492", "0.379506", "0.382818", "0.405825", "0.428732", "0.440109", 
+"0.446205", "0.461316", "0.504754", "0.508623", "0.510608", "0.539124", 
+"0.549781", "0.553558", "0.561052", "0.567129", "0.588293", "0.664548", 
+"0.701038", "0.735986", "0.827672", "0.828134", "0.878700", "0.886590", 
+"0.896340", "0.912330", "0.982388", "0.992804"), 'Log_2 Fold Change' = c(" 1.7407", 
+" 1.6923", "-1.9188", " 2.4133", "-1.2752", "-1.7361", "-3.5340", 
+"-1.5115", " 2.5397", " 1.4381", "-1.8551", "-1.4818", " 1.5660", 
+"-1.8852", " 1.6870", "-1.5431", " 1.9729", " 1.5837", "-1.2515", 
+"-1.6002", "-1.3691", " 0.6251", " 0.7447", "-1.0323", "-1.0618", 
+"-0.9980", "-2.1158", " 1.0546", "-0.8582", " 0.7173", " 1.2478", 
+"-0.6839", " 1.6661", " 1.2523", " 0.6550", "-1.3041", "-1.0101", 
+"-0.8394", "-0.6324", "-0.9036", "-0.6461", "-0.7312", "-0.4504", 
+"-0.4916", "-0.4095", "-0.6452", "-0.5979", "-0.7492", "-0.4072", 
+"-0.6446", "-0.4394", "-0.4055", "-0.4483", "-0.3390", "-0.0933", 
+"-0.0474")), row.names = c("SERPINF1", "CECR2", "TGFBI", "GLT1D1", 
+"ARSA", "PTPRG", "S100A4", "APOE", "MOV10L1", "ASTN1", "DPYD", 
+"STEAP3", "IGSF10", "PSTPIP1", "MEIS1", "RFX2", "TNFRSF21", "SELENBP1", 
+"PLXNC1", "SMIM3", "KCNJ5", "NIN", "TLN2", "ACD", "LSR", "VENTX", 
+"SECTM1", "RIMS2", "IL15", "ZNF662", "PTPRZ1", "FOXP1", "ZBTB8B", 
+"GRIA2", "ZNF532", "ADAM8", "TSHZ3", "TTYH3", "FBRSL1", "EMP2", 
+"SMAD7", "RUNX3", "ULK3", "CBX6", "SLC38A7", "CLDN15", "GYPC", 
+"ADAMTS13", "GAS2L1", "ATOH8", "TM9SF1", "ZNF703", "A1BG", "ZNF696", 
+"ZNF843", "CHCHD5"), class = "data.frame")
+```
+
+```{r, echo=FALSE}
+study_confirmed_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.000041", "0.004718", "0.005319", 
+"0.019995", "0.019995", "0.019995", "0.019995", "0.037131", "0.041758", 
+"0.042672", "0.044855", "0.048952", "0.048952"), 'Log_2 Fold Change' = c(" 1.74", 
+" 1.69", "-1.92", " 2.41", "-1.28", "-1.74", "-3.53", "-1.51", 
+" 2.54", " 1.44", "-1.86", "-1.48", " 1.57", "-1.89")), row.names = c("SERPINF1", 
+"CECR2", "TGFBI", "GLT1D1", "ARSA", "PTPRG", "S100A4", "APOE", 
+"MOV10L1", "ASTN1", "DPYD", "STEAP3", "IGSF10", "PSTPIP1"), class = "data.frame")
+```
+
+```{r, echo=FALSE}
+my_de_genes_df <- structure(list('Adjusted P-value' = c("0.000041", "0.000041", "0.004718", "0.005319", 
+"0.011051", "0.011338", "0.019995", "0.019995", "0.019995", "0.019995", 
+"0.019995", "0.019995", "0.019995", "0.035989", "0.037131", "0.037131", 
+"0.037131", "0.037131", "0.037131", "0.037131", "0.037131", "0.037131", 
+"0.041758", "0.041758", "0.042241", "0.042672", "0.042971", "0.044330", 
+"0.044855", "0.044855", "0.048952", "0.048952", "0.048952", "0.048952", 
+"0.048952", "0.048952", "0.048952", "0.048952"), 'Log_2 Fold Change' = c(" 1.74", 
+" 1.69", "-1.92", " 2.41", " 4.16", " 2.21", "-3.53", " 4.98", 
+"-1.74", " 4.22", " 4.52", "-1.51", "-1.28", " 3.28", " 5.31", 
+" 2.05", " 2.85", " 5.73", " 4.85", " 3.36", " 2.54", " 1.36", 
+" 1.44", " 1.77", " 2.26", "-1.86", " 2.90", " 1.86", "-1.48", 
+" 1.29", " 2.56", " 1.90", " 1.57", " 1.14", " 2.66", " 2.79", 
+" 1.50", "-1.89")), row.names = c("SERPINF1", "CECR2", "TGFBI", 
+"GLT1D1", "MYOM3", "FGL1", "S100A4", "FMO1", "PTPRG", "PGC", 
+"EVPL", "APOE", "ARSA", "KDR", "KLF18", "ESRRG", "TGM4", "TECTB", 
+"KRT77", "EPPIN", "MOV10L1", "NEXMIF", "ASTN1", "STRIP2", "C2orf16", 
+"DPYD", "EDAR", "DGKI", "STEAP3", "PLEKHG1", "USH2A", "CCDC121", 
+"IGSF10", "MCF2L2", "OPRK1", "RGS22", "SORCS1", "PSTPIP1"), class = "data.frame")
+```
+
+
 
 # **Introduction**
 
-In this report, I will be performing a differential expression (DE) analysis of RNA-seq data that has been derived from both Alzheimer's patient and control individual Microglia.
+Alzheimer's disease (AD) effects approximately 5.8 million people in the the United States ages 65 and older, with early sign and symptoms of the disease centering around forgetfulness, followed by impairment of memory until loss of ability to carry out everyday tasks. There is currently no treatment that cures AD or alters the disease process in the brain. [Mayo Clinic](https://www.mayoclinic.org/diseases-conditions/alzheimers-disease/symptoms-causes/syc-20350447).
 
-**Graphical Abstract from [Alzheimer's Patient Microglia Exhibit Enhanced Aging and Unique Transcriptional Activation](https://pubmed.ncbi.nlm.nih.gov/32610143/)**
+Recent genetic studies of humans have identified brain specific myeloid cells (microglia) as a potential key cell type controlling an individual's risk of aquiring Alzheimer's Disease (AD):
+
+-   (Genetics of Alzheimer's disease: where we are, and where we are going, Bellenguez et al, 2020)[<https://www.sciencedirect.com/science/article/pii/S0959438819301357>]
+-   (Microglia in Alzheimer's disease, Hansen et al.,2018)[<https://rupress.org/jcb/article/217/2/459/52543/Microglia-in-Alzheimer-s-diseaseAlzheimer-s>]
+
+In this report, I will be performing a differential expression (DE) analysis of RNA-seq data that has been derived from both Alzheimer's patient and control individual Microglia. This data is assosciated with the publication: [Alzheimer's Patient Microglia Exhibit Enhanced Aging and Unique Transcriptional Activation](https://pubmed.ncbi.nlm.nih.gov/32610143/), of which the graphical abstract is below:
 
 ![](images/paste-BBC9C395.png){width="402"}
 
-A brief paragraph summarizing the
+This study examined the expression of twenty-five genes known or proposed to be associated with AD risk or progression and found that most AD risk genes in their purified frozen brain tissue cell types showed preferential expression in microglia compared with other brain cell types. They have also examined whether any of these genes displayed altered expression levels in AD versus control cells, and observed that APOE, ABCA7, GPR141, PTK2B, SPI1, and ZYX appeared upregulated in AD microglia, whereas MEF2C appeared downregulated (un-adjusted p value \< 0.05). The indication of upregulation of APOE is specifically interesting, as previous studies have indicated to the potential importantance of the gene [APOE ε4: the most prevalent yet understudied risk factor for Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/25217293/).
 
--   Scientific background AND/OR
-
--   Why that particular question is interesting
-
-    -   **Cite at least 3-5 papers**
-
--   Clearly state the question you're going to investigate as well as the specific hypothesis you set out to test
-
-Alzheimer's is an important disesease to study as so many people experience issues related to Alzheimer's, as well as how reserach has sort of stagnated as it has not been a largely profitable model to study recently, and the paper that I am going off of is very recent on June 30th 2020.
-
-**Publication**: [Alzheimer's Patient Microglia Exhibit Enhanced Aging and Unique Transcriptional Activation](https://pubmed.ncbi.nlm.nih.gov/32610143/)
-
-This study is very relevant as examined the expression of twenty-five genes known orpostulated to be associated with AD risk or progression and found that most AD risk genes in their cell types purified from frozen brain tissues showed preferential expression in microglia compared with other brain cell types. They have also examined whether any of these genes displayed altered expression levels in AD versus control cells, and observed that APOE, ABCA7, GPR141, PTK2B, SPI1, and ZYX appeared upregulated in AD microglia, whereas MEF2C appeared downregulated (un-adjusted p value \< 0.05).
-
-My aim is to recapitulate the author's results (being that the prior mentioned set of genes **is** indeed upgregulaed in AD patient microglia in comparison to controls) while holding this data to very high standards of quality control, and making use of the industry-standard splice-aware RNA-seq aligner `STAR` and differential expression profiling tool `DESeq2`.
-
-**More scientific background and paper-citing here**
-
-APOE -- Michaelson, D.M., APOE epsilon4: the most prevalent yet understudied risk factor for Alzheimer's disease. Alzheimers Dement, 2014. 10(6): p. 861-8.
-
-[What APOE Means for Your Health](https://www.alzdiscovery.org/cognitive-vitality/blog/what-apoe-means-for-your-health#ref-2)
-
--   Alzheimer's studies have proven to be difficult
--   This is a large dataset that is well annotated
+My aim specifically is to recapitulate the author's results, confirming that the prior mentioned set of genes **is** indeed upgregulaed in AD patient microglia in comparison to controls. Throughout this analysis I intend to hold this data to high quality control standards in order to ensure the correctness of the analysis findings. In order for this report to be reproducible and easily understood, I will make use of the industry-standard splice-aware RNA-seq aligner `STAR`, and differential expression profiling tool `DESeq2`.
 
 # **Results**
 
-**Key Insights**:
+![](images/paste-B7115C2D.png){width="635"}
 
-**Possibly include the final volcano plot / gene list table with p-values here (should help readability and eye appeal)**
+Of the **25** literature-selected genes identified in this study, I have confirmed **14** to be differentially expressed. A table containing the confirmed genes with their multiple-testing corrected p-value as well as log_2 fold change of expression can be found below. An extended list of genes found to be differntially expressed in this report can be found in the [Differential Expression Analysis](### differential-expression-analysis) section of this report.
 
 ```{r}
-## TODO: read in previously written out gene-list data frame with p-values
+kable(study_confirmed_genes_df)
 ```
-
--   The key set of genes (**gene list here**) **was** / **was not** found to be enriched in this cohort's AD vs Control Microglia derived tissue.
 
 **Possible future experiments / analyses**:
 
@@ -589,7 +633,7 @@ plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)),
      ylab = 'library sizes', xlab = 'size factors')
 ```
 
-From the plot above, we can see that our key necessary assumption that *size factors should be around 1 and scale with number of reads per sample** is met. However, this was not originally the case before some data filtering. 
+From the plot above, we can see that our key necessary assumption that \*size factors should be around 1 and scale with number of reads per sample\*\* is met. However, this was not originally the case before some data filtering.
 
 ```{r, echo = FALSE, fig.width = 10}
 par(mfrow = c(1, 3))
@@ -635,7 +679,7 @@ DESeq.ds.raw_1 <-
     countData = as.matrix(raw_read_counts),
     colData = raw_sample_info,
     rowData = raw_gene_info_df, 
-    design = ~ sex + sex:Diagnosis + Diagnosis)
+    design = ~ sex + Diagnosis)
 
 keep_genes <- rowSums(counts(DESeq.ds.raw_1)) > 0
 
@@ -691,7 +735,7 @@ DESeq.ds.raw_2 <-
     countData = as.matrix(raw_read_counts),
     colData = raw_sample_info,
     rowData = raw_gene_info_df, 
-    design = ~ sex + sex:Diagnosis + Diagnosis)
+    design = ~ sex  + Diagnosis)
 
 keep_genes <- rowSums(counts(DESeq.ds.raw_2)) > 0
 
@@ -706,8 +750,6 @@ plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)),
      ylab = 'library sizes', xlab = 'size factors', 
      main = 'Filtering Mitochondrial and Non-Protein Coding')
 ```
-
-
 
 ```{r, fig.width = 10}
 p1 <-
@@ -744,7 +786,6 @@ p1 + p2
 
 Again, this section has influenced the filtering I have applied
 
-
 **No Gene Filtering Applied**
 
 ```{r, echo = FALSE}
@@ -779,7 +820,6 @@ p4 <-
 
 p3 + p4
 ```
-
 
 **Mitchondrial Gene Filtering Applied**
 
@@ -821,7 +861,6 @@ p5 + p6
 ```{r, echo = FALSE}
 p1 + p2
 ```
-
 
 ```{r}
 DESeq.rlog <- rlog(DESeq.ds, blind = TRUE)
@@ -903,9 +942,9 @@ msd_plot$gg +
 
 -   **APOE**:
 
-> <font size=2.5> There are three types of the APOE gene, called alleles: APOE2, E3 and E4. Everyone has two copies of the gene and the combination determines your APOE "genotype"---E2/E2, E2/E3, E2/E4, E3/E3, E3/E4, or E4/E4. The E2 allele is the rarest form of APOE and carrying even one copy appears to reduce the risk of developing Alzheimer's by up to 40%. APOE3 is the most common allele and doesn't seem to influence risk. The APOE4 allele, present in approximately 10-15% of people, increases the risk for Alzheimer's and lowers the age of onset. Having one copy of E4 (E3/E4) can increase your risk by 2 to 3 times while two copies (E4/E4) can increase the risk by 12 times [2]. </font>
-
 -- [What APOE Means for Your Health](https://www.alzdiscovery.org/cognitive-vitality/blog/what-apoe-means-for-your-health#ref-2)
+
+> <font size=2.5> There are three types of the APOE gene, called alleles: APOE2, E3 and E4. Everyone has two copies of the gene and the combination determines your APOE "genotype"---E2/E2, E2/E3, E2/E4, E3/E3, E3/E4, or E4/E4. The E2 allele is the rarest form of APOE and carrying even one copy appears to reduce the risk of developing Alzheimer's by up to 40%. APOE3 is the most common allele and doesn't seem to influence risk. The APOE4 allele, present in approximately 10-15% of people, increases the risk for Alzheimer's and lowers the age of onset. Having one copy of E4 (E3/E4) can increase your risk by 2 to 3 times while two copies (E4/E4) can increase the risk by 12 times [2]. </font>
 
 -   **Post-Mortem Interval (PMI)** --
 
@@ -918,10 +957,6 @@ msd_plot$gg +
 ```
 
 -   **Sex**
-
-```{r}
-# TODO: How many males/females in control vs AD? 
-```
 
 **Male vs Female Counfounding Analysis**
 
@@ -954,8 +989,6 @@ data.frame(x = c('Heatmap will all genes', 'PCA with all genes'),
 }
 </style>
 ```
-
-
 ```{r}
 par(mfrow = c(2, 2))
 
@@ -1147,7 +1180,7 @@ DGE.results <-
 # shrink logFC values
 DGE.results <-
   lfcShrink(DESeq.ds, 
-            coef = length(resultsNames(DESeq.ds)), 
+            coef = "Diagnosis_Control_vs_AD", 
             res = DGE.results,
             # BiocManager::install('apeglm')
             type = "apeglm")
@@ -1167,7 +1200,7 @@ plotDispEsts(dds.disp)
 
 [A great resource about how to interpret this plot](https://hbctraining.github.io/DGE_workshop/lessons/04_DGE_DESeq2_analysis.html)
 
-We see that there 
+We see that there
 
 ```{r}
 waldTestResult <- nbinomWaldTest(dds.disp)
@@ -1257,7 +1290,8 @@ study_selected_genes <- c(
 
 
 diff_exp_df %>%
-  filter(gene_name %in% study_selected_genes) %>% 
+  filter(gene_name %in% study_selected_genes, 
+         padj < 0.05) %>% 
   # picking top-pvalue ensmbl-gene for each
   # hgnc gene-symbol identified gene
   group_by(gene_name) %>% 
@@ -1270,9 +1304,8 @@ diff_exp_df %>%
   select(padj, log2FoldChange) %>% 
   mutate(padj = format(padj, digits = 2, scientific = FALSE), 
          log2FoldChange = format(log2FoldChange, digits = 3)) %>%           
-  kable()
+  kable
 ```
-
 
 **Which genes have we confirmed from the study-selected genes to be differentially expressed?**
 
