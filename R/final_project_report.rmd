@@ -5,10 +5,10 @@ date: "4/19/2021"
 output: 
   html_document: 
     toc: true
-    toc_float: false
+    toc_float: true
     toc_depth: 2
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{=html}
@@ -20,6 +20,8 @@ editor_options:
 }
 </style>
 ```
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
                       message = FALSE, 
