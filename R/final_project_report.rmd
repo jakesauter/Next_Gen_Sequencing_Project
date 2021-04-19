@@ -656,8 +656,6 @@ DESeq.ds %>%
 
 ### **Mapping Quality Assessment**
 
-**Number of reads sequenced per sample**
-
 In order to determine useful characteristics about our sample read mappings to inform proper normalization, we can begin by inspecting how many reads we have acquired per sample.
 
 ```{r}
@@ -665,7 +663,8 @@ colSums(counts(DESeq.ds)) %>%
   data.frame(sample = str_extract(names(.), '[0-9]{3}$'), reads = .) %>% 
   ggplot() + 
   geom_col(aes(x = sample, y = reads)) + 
-  theme(axis.text.x = element_text(angle=-35))
+  theme(axis.text.x = element_text(angle=-35)) + 
+  ggtitle('Mapped Read Counts Per Sample')
 ```
 
 **Filtering Gene Counts**
