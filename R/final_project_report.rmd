@@ -128,7 +128,12 @@ My aim specifically is to recapitulate the author's results, confirming that the
 
 # **Results**
 
+## **Differential Expression Volcano Plot**
+
 ![](images/final_volcano_plot.png){width="635"}
+
+
+## **Differentially Expressed Gene List**
 
 Of the **25** literature-selected genes identified in this study, I have confirmed **14** to be differentially expressed. A table containing the confirmed genes with their multiple-testing corrected p-value as well as log_2 fold change of expression can be found below. An extended list of genes found to be differntially expressed in this report can be found in the [Differential Expression Analysis](### differential-expression-analysis) section of this report.
 
@@ -136,27 +141,13 @@ Of the **25** literature-selected genes identified in this study, I have confirm
 kable(study_confirmed_genes_df)
 ```
 
-**Possible future experiments / analyses**:
+## **Possible Future Experiments and Analyses**:
 
--   Evaluating all cell types
--   More / better data
--   Include more analysis of genes from literature
+After performing this analysis, I have identified a few areas that could be improved or extended upon. 
 
-Another brief paragraph summarizing:
+The study in question offers **4** total bulk-sorted cell types, and in this report I have chosen to only analyze the **Myeloid** cell type. Thus, in the future it might be interesting to analyze the other cell type data (Astrocytes, Endothelial, Neurons). As well as analyzing more cell types, more background-literature genes of interest could be integrated into this analysis, in order to test for differential expression in this dataset.
 
--   key insights
-
--   possible future experiments
-
--   possible future analyses that might enhance your own analysis.
-
--   Discussion of the limits that your data set has!
-
--   Dataset is from frozen tissue, and upon further analysis it seemed as if a lot of Mitochondrial RNA and long Non-coding RNAs (which degrade slower) were more present than other transcripts
-
--   Lead to me having to filter my dataset to only protein coding genes in order to get decent normalization across all samples in the project.
-
--   A few of the samples were not annotated with sex, causing me to not use this data as I would like to control for this possibly confounding factor.
+As well as possible further anaylsis with the dataset in hand, there is room for improvement in the quality of collected data as well. Due to the nature of this dataset being generated from frozen tissue, large amounts of long-non-coding RNAs and Mitochondrial RNAs were detected, causing the need for filtering by only protein-coding genes. This is obvioulsy not the ideal setting, so there is certainly room for improvement of analyzing fresher tissue datasets, or more well-preserved datasets. This is a challenge though as large, well annotated, fresh, human cohort data has not been practical to collect in the past. 
 
 # **Methods**
 
@@ -899,7 +890,7 @@ p5 + p6
 p1 + p2
 ```
 
-### **Exploratory Data Analysis`**
+### **Exploratory Data Analysis**
 
 In order to briefly explore possible relationships and patterns in our data, such as confounding variables or strength of seperation between `Diagnosis`, we will apply `DESeq2::rlog` to the **raw count data**. The `rlog` function transforms the count data to the log2 scale, while also minimizing differences between samples for rows with small counts, and even normalizing with respect to library size ontop of that.
 
@@ -1628,62 +1619,75 @@ treemap(
 
 # **Discussion**
 
+In this report, I have confirmed differential expression of **14** of **25** literature supported Alzheimer's Disease associated genes. Below I provide a brief description of each gene based on [NCBI gene information](https://www.ncbi.nlm.nih.gov/gene) and the [GeneCards Human Gene Database](https://www.genecards.org/cgi-bin)
+
 ## **Interesting Identified Genes**
 
-**APOE** (apolipoprotein E) -- Involved in the metabolism of fats in the body of mammals. A subtype is implicated in Alzheimer's disease and cardiovascular disease.
+**SERPINF1** (serpin family F member 1) --  The encoded protein is secreted and strongly inhibits angiogenesis. In addition, this protein is a neurotrophic factor involved in neuronal differentiation in retinoblastoma cells. Mutations in this gene were found in individuals with osteogenesis imperfecta.
 
-**PSTPIP1** (proline-serine-threonine phosphatase interacting protein 1) --  found in association with the cytoskeleton in myeloid/monocytic cells and modulates immunoregulatory functions
+**CECR2** (CECR2 histone acetyl-lysine reader) --  Involved in chromatin remodeling, and may additionally play a role in DNA damage response. The encoded protein functions as part of an ATP-dependent complex that is involved in neurulation.
 
-**ASTN1** (astrotactin 1) -- Neuronal adhesion molecule required for glial-guided migration of young postmitotic neuroblasts in cortical regions of developing brain, including cerebrum, hippocampus, cerebellum, and olfactory bulb
+**TGFBI** (transforming growth factor beta induced ) --  The protein is induced by transforming growth factor-beta and acts to inhibit cell adhesion. Mutations in this gene are associated with multiple types of corneal dystrophy.
 
-**TGFBI** (transforming growth factor beta induced ) --  The protein is induced by transforming growth factor-beta and acts to inhibit cell adhesion. Mutations in this gene are associated with multiple types of corneal dystrophy
+**GLT1D1** (glycosyltransferase 1 domain containing 1) --  Protein Coding gene associated with Hepatocellular Carcinoma. Gene Ontology (GO) annotations related to this gene include transferase activity, transferring glycosyl groups. An important paralog of this gene is ALG2.
 
-**SERPINF1** (serpin family F member 1) --  The encoded protein is secreted and strongly inhibits angiogenesis. In addition, this protein is a neurotrophic factor involved in neuronal differentiation in retinoblastoma cells. Mutations in this gene were found in individuals with osteogenesis imperfecta
+**ARSA** (arylsulfatase A) -- Defects in this gene lead to metachromatic leucodystrophy (MLD), a progressive demyelination disease which results in a variety of neurological symptoms and ultimately death.
+
+**PTPRG** (protein tyrosine phosphatase receptor type G) --  Known to be signaling molecules that regulate a variety of cellular processes including cell growth, differentiation, mitotic cycle, and oncogenic transformation. 
+
+**S100A4** ( S100 calcium binding protein A4) --  S100 proteins are localized in the cytoplasm and/or nucleus of a wide range of cells, and involved in the regulation of a number of cellular processes such as cell cycle progression and differentiation.
+
+**APOE** (apolipoprotein E) -- Involved in the metabolism of fats in the body of mammals. A subtype is implicated in Alzheimer’s disease and cardiovascular disease.
+
+
+**MOV10L1** (Mov10 like RISC complex RNA helicase 1) -- This gene is similar to a mouse gene that encodes a putative RNA helicase and shows testis-specific expression. Multiple transcript variants encoding different isoforms have been found for this gene.
+
+
+**ASTN1** (astrotactin 1) -- Neuronal adhesion molecule required for glial-guided migration of young postmitotic neuroblasts in cortical regions of developing brain, including cerebrum, hippocampus, cerebellum, and olfactory bulb.
+
+**DPYD** (dihydropyrimidine dehydrogenase) -- Initial and rate-limiting factor in the pathway of uracil and thymidine catabolism.
 
 **STEAP3** (STEAP3 metalloreductase) --  This protein may mediate downstream responses to p53, including promoting apoptosis. Deficiency in this gene can cause anemia.
 
-**S100A4** ( S100 calcium binding protein A4) --  S100 proteins are localized in the cytoplasm and/or nucleus of a wide range of cells, and involved in the regulation of a number of cellular processes such as cell cycle progression and differentiation
 
-**DPYD** (dihydropyrimidine dehydrogenase) -- Initial and rate-limiting factor in the pathway of uracil and thymidine catabolism
-
-**PTPRG** (protein tyrosine phosphatase receptor type G) --  known to be signaling molecules that regulate a variety of cellular processes including cell growth, differentiation, mitotic cycle, and oncogenic transformation. 
-
-**CECR2** (CECR2 histone acetyl-lysine reader) --  involved in  chromatin remodeling, and may additionally play a role in DNA damage response. The encoded protein functions as part of an ATP-dependent complex that is involved in neurulation
-
-**ARSA** (arylsulfatase A) -- Defects in this gene lead to metachromatic leucodystrophy (MLD), a progressive demyelination disease which results in a variety of neurological symptoms and ultimately death
+**IGSF10** (Immunoglobulin Superfamily Member 10) -- Involved in the control of early migration of neurons expressing gonadotropin-releasing hormone (GNRH neurons) (By similarity). May be involved in the maintenance of osteochondroprogenitor cells pool (By similarity).
 
 
+**PSTPIP1** (proline-serine-threonine phosphatase interacting protein 1) --  Found in association with the cytoskeleton in myeloid/monocytic cells and modulates immunoregulatory functions
 
-**MOV10L1** (Mov10 like RISC complex RNA helicase 1) 
-
-
-
-**GLT1D1** (glycosyltransferase 1 domain containing 1) 
 
 ## **Issues, Problems and Limitations**
 
-Discussion A brief description/list of issues/problems/limitations you encountered along the way and how you addressed them.
+While analyzing this dataset, a key issue I have found is that it was sourced from frozen-tissue, causing degredation of some cell-resident RNA, and an overall enrichment in the samples for harder-to-degrade RNA like long-non-coding RNAs (lncRNAs) and Mitchondrial RNAs. In order to still provide confident results in the genes I have identified as differentially expressed, I have **filtered for only non-Mitochondrial protein-coding genes**. This solved many of the read count normalization hurdles, however limited the scope of my analysis and findings as well.
 
-A brief description/list of issues/problems/limitations you encountered along the way and how you addressed them. A table that summarizes the key data sets that you have generated during the analyses and decided to keep.
 
 ## **Key Datasets Generated**
 
+While performing this analysis I have generated a few key datasets resulting from various processes / commands. A table containing information on the type of datasets as well as how they were generated and can be found below. 
+
+|Generated.By  |Dataset.Type                   |Section Generated   |
+|:-------------|:------------------------------|:-------------|
+|TrimGalore    |Trimmed Reads                  |[Trimmed Reads](#trimgalore) |
+|STAR          |Aligned Samples                |[Aligned Samples](#star) |
+|featureCounts |featureCounts                  |[featureCounts](#featurecounts) |
+|DESeq2        |Differentially Expressed Genes |[DE Genes](#negative-binomial-wald-test) |
+
 ```{r, echo=FALSE}
-data.frame('Dataset Name' = c('Dataset 1', 
-                            'Dataset 2', 
-                            'Dataset 3', 
-                            'Dataset 4'), 
-           'Generated By' = c('TrimGalore', 
-                            'STAR', 
-                            'featureCounts', 
-                            'DESeq2'), 
-           'Dataset Type' = c('Trimmed Reads', 
-                            'Aligned Samples', 
-                            'featureCounts', 
-                            'Differentially Expressed Genes'), 
-           'Description' = c('Description 1', 
-                           'Description 2', 
-                           'Description 3', 
-                           'Description 4')) %>% 
-  kable()
+# data.frame('Dataset Name' = c('Dataset 1', 
+#                             'Dataset 2', 
+#                             'Dataset 3', 
+#                             'Dataset 4'), 
+#            'Generated By' = c('TrimGalore', 
+#                             'STAR', 
+#                             'featureCounts', 
+#                             'DESeq2'), 
+#            'Dataset Type' = c('Trimmed Reads', 
+#                             'Aligned Samples', 
+#                             'featureCounts', 
+#                             'Differentially Expressed Genes'), 
+#            'Description' = c('Description 1', 
+#                            'Description 2', 
+#                            'Description 3', 
+#                            'Description 4')) %>% 
+#   kable()
 ```
