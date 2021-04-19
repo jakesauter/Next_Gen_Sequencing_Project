@@ -1483,7 +1483,9 @@ DGEgenes <- diff_exp_df %>%
   filter(padj < 0.05) %>% 
   set_rownames(.$gene_name) %>% 
   select(padj, log2FoldChange) %>% 
-  arrange(padj) %>% .$gene_name
+  arrange(padj) %>% rownames()
+
+DGEgenes
 ```
 
 
@@ -1622,7 +1624,6 @@ write.table(
 ```
 
 ```{r, echo = FALSE}
-
 library(treemap) 								# treemap package by Martijn Tennekes
 
 # Set the working directory if necessary
@@ -1632,16 +1633,16 @@ library(treemap) 								# treemap package by Martijn Tennekes
 # Here is your data from REVIGO. Scroll down for plot configuration options.
 
 revigo.names <- c("term_ID","description","freqInDbPercent","value","uniqueness","dispensability","representative");
-revigo.data <- rbind(c("GO:0017113","dihydropyrimidine dehydrogenase (NADP+) activity",0.006,2.789,0.871,0.000,"dihydropyrimidine dehydrogenase (NADP+) activity"),
-c("GO:0052851","ferric-chelate reductase (NADPH) activity",0.017,2.198,0.780,0.328,"dihydropyrimidine dehydrogenase (NADP+) activity"),
-c("GO:0038048","dynorphin receptor activity",0.006,2.492,0.998,0.000,"dynorphin receptor activity"),
-c("GO:0046911","metal chelating activity",0.006,2.920,0.999,0.000,"metal chelating activity"),
-c("GO:0002058","uracil binding",0.011,2.466,0.773,0.001,"uracil binding"),
-c("GO:0050661","NADP binding",0.293,2.258,0.875,0.230,"uracil binding"),
-c("GO:0002054","nucleobase binding",0.028,2.088,0.886,0.245,"uracil binding"),
-c("GO:0050682","AF-2 domain binding",0.017,2.120,0.999,0.001,"AF-2 domain binding"),
-c("GO:0060228","phosphatidylcholine-sterol O-acyltransferase activator activity",0.033,2.143,0.998,0.012,"phosphatidylcholine-sterol O-acyltransferase activator activity"),
-c("GO:0004098","cerebroside-sulfatase activity",0.006,2.773,0.956,0.079,"cerebroside-sulfatase activity"));
+revigo.data <- rbind(c("GO:0017113","dihydropyrimidine dehydrogenase (NADP+) activity",0.002,2.789,0.942,0.000,"dihydropyrimidine dehydrogenase (NADP+) activity"),
+c("GO:0052851","ferric-chelate reductase (NADPH) activity",0.001,2.198,0.836,0.159,"dihydropyrimidine dehydrogenase (NADP+) activity"),
+c("GO:0038048","dynorphin receptor activity",0.001,2.492,0.983,0.000,"dynorphin receptor activity"),
+c("GO:0046911","metal chelating activity",0.000,2.920,0.979,0.000,"metal chelating activity"),
+c("GO:0004098","cerebroside-sulfatase activity",0.000,2.773,0.994,0.012,"cerebroside-sulfatase activity"),
+c("GO:0002058","uracil binding",0.000,2.466,0.795,0.021,"uracil binding"),
+c("GO:0050661","NADP binding",0.673,2.258,0.916,0.135,"uracil binding"),
+c("GO:0002054","nucleobase binding",0.001,2.088,0.931,0.144,"uracil binding"),
+c("GO:0050682","AF-2 domain binding",0.000,2.120,0.978,0.022,"AF-2 domain binding"),
+c("GO:0060228","phosphatidylcholine-sterol O-acyltransferase activator activity",0.001,2.143,0.983,0.095,"phosphatidylcholine-sterol O-acyltransferase activator activity"));
 
 stuff <- data.frame(revigo.data);
 names(stuff) <- revigo.names;
@@ -1665,9 +1666,9 @@ treemap(
   inflate.labels = FALSE,      # set this to TRUE for space-filling group labels - good for posters
   lowerbound.cex.labels = 0,   # try to draw as many labels as possible (still, some small squares may not get a label)
   fontsize.labels = c(0, 12),  # don't draw main group names as they are redundant
-  bg.labels = "#CCCCCCAA",   # define background color of group labels
+  # bg.labels = "#CCCCCCAA",   # define background color of group labels
 								 # "#CCCCCC00" is fully transparent, "#CCCCCCAA" is semi-transparent grey, NA is opaque
-  # bg.labels = 0,
+  bg.labels = 0,
   position.legend = "none"
 )
 ```
