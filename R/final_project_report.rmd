@@ -29,7 +29,7 @@ opts_chunk$set(echo = TRUE,
 ```
 
 ```{r, echo=FALSE}
-study_selected_genes <- c(
+literature_supported_genes <- c(
     'LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 
     'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 
     'PTPRZ1', 'IGSF10', 'GRIA2', 'MEIS1', 'SELENBP1', 
@@ -46,7 +46,41 @@ study_selected_genes <- c(
 ```
 
 ```{r, echo=FALSE}
-study_selected_genes_df <- structure(list(padj = c("0.000041", "0.000041", "0.004718", "0.005319", 
+study_de_genes <- c('LOC102724661', 'ANKRD26P3', 'MOV10L1', 'HIST2H2BA', 'ZBTB8B', 'GLT1D1', 'TNFRSF21', 'CECR2', 'PDD6IPP2', 'PTPRZ1', 'IGSF10', 'GRIA2', 'MEIS1', 'SELENBP1', 'SERPINF1', 'RIMS2', 'ASTN1', 'TLN2', 'ZNF532', 'ZNF662', 'NIN', 'ULK3', 'SLC38A7', 'FOXP1', 'ARSA', 'CTBP1-AS', 'LOC102725328', 'CBX6', 'GYPC', 'FBRSL1', 'SMAD7', 'PLXNC1', 'CLDN15', 'TSHZ3', 'KCNJ5', 'DPYD', 'STEAP3', 'RUNX3', 'PTPRG', 'ACD', 'TTYH3', 'LOC100133445', 'LOC102724549', 'VENTX', 'TM9SF1', 'SMIM3', 'ZNF703', 'TGFBI', 'EMP2', 'PSTPIP1', 'ZNF696', 'RFX2', 'APOE', 'ATOH8', 'ADAM8', 'GAS2L1', 'CHCHD5', 'ADAMTS13', 'A1BG', 'IL15', 'SECTM1', 'FAM109A', 'LOC100507639', 'ZNF843', 'S100A4', 'LSR')
+
+study_de_genes_df <- structure(list(padj = c("0.000041", "0.000041", "0.004718", "0.005319", 
+"0.019995", "0.019995", "0.019995", "0.019995", "0.037131", "0.041758", 
+"0.042672", "0.044855", "0.048952", "0.048952", "0.059128", "0.059128", 
+"0.091389", "0.091389", "0.093845", "0.107681", "0.233903", "0.240712", 
+"0.240922", "0.240922", "0.272270", "0.302060", "0.351846", "0.361383", 
+"0.365492", "0.379506", "0.382818", "0.405825", "0.428732", "0.440109", 
+"0.446205", "0.461316", "0.504754", "0.508623", "0.510608", "0.539124", 
+"0.549781", "0.553558", "0.561052", "0.567129", "0.588293", "0.664548", 
+"0.701038", "0.735986", "0.827672", "0.828134", "0.878700", "0.886590", 
+"0.896340", "0.912330", "0.982388", "0.992804"), log2FoldChange = c(" 1.7407", 
+" 1.6923", "-1.9188", " 2.4133", "-1.2752", "-1.7361", "-3.5340", 
+"-1.5115", " 2.5397", " 1.4381", "-1.8551", "-1.4818", " 1.5660", 
+"-1.8852", " 1.6870", "-1.5431", " 1.9729", " 1.5837", "-1.2515", 
+"-1.6002", "-1.3691", " 0.6251", " 0.7447", "-1.0323", "-1.0618", 
+"-0.9980", "-2.1158", " 1.0546", "-0.8582", " 0.7173", " 1.2478", 
+"-0.6839", " 1.6661", " 1.2523", " 0.6550", "-1.3041", "-1.0101", 
+"-0.8394", "-0.6324", "-0.9036", "-0.6461", "-0.7312", "-0.4504", 
+"-0.4916", "-0.4095", "-0.6452", "-0.5979", "-0.7492", "-0.4072", 
+"-0.6446", "-0.4394", "-0.4055", "-0.4483", "-0.3390", "-0.0933", 
+"-0.0474")), row.names = c("SERPINF1", "CECR2", "TGFBI", "GLT1D1", 
+"ARSA", "PTPRG", "S100A4", "APOE", "MOV10L1", "ASTN1", "DPYD", 
+"STEAP3", "IGSF10", "PSTPIP1", "MEIS1", "RFX2", "TNFRSF21", "SELENBP1", 
+"PLXNC1", "SMIM3", "KCNJ5", "NIN", "TLN2", "ACD", "LSR", "VENTX", 
+"SECTM1", "RIMS2", "IL15", "ZNF662", "PTPRZ1", "FOXP1", "ZBTB8B", 
+"GRIA2", "ZNF532", "ADAM8", "TSHZ3", "TTYH3", "FBRSL1", "EMP2", 
+"SMAD7", "RUNX3", "ULK3", "CBX6", "SLC38A7", "CLDN15", "GYPC", 
+"ADAMTS13", "GAS2L1", "ATOH8", "TM9SF1", "ZNF703", "A1BG", "ZNF696", 
+"ZNF843", "CHCHD5"), class = "data.frame")
+```
+
+
+```{r, echo=FALSE}
+literature_supported_genes_df <- structure(list(padj = c("0.000041", "0.000041", "0.004718", "0.005319", 
 "0.019995", "0.019995", "0.019995", "0.019995", "0.037131", "0.041758", 
 "0.042672", "0.044855", "0.048952", "0.048952", "0.059128", "0.059128", 
 "0.091389", "0.091389", "0.093845", "0.107681", "0.233903", "0.240712", 
@@ -113,18 +147,18 @@ my_de_genes_df <- structure(list(padj = c("0.000041", "0.000041", "0.004718", "0
 
 Alzheimer's disease (AD) effects approximately 5.8 million people in the the United States ages 65 and older, with early sign and symptoms of the disease centering around forgetfulness, followed by impairment of memory until loss of ability to carry out everyday tasks. There is currently no treatment that cures AD or alters the disease process in the brain. [Mayo Clinic](https://www.mayoclinic.org/diseases-conditions/alzheimers-disease/symptoms-causes/syc-20350447).
 
-Recent genetic studies of humans have identified brain specific myeloid cells (microglia) as a potential key cell type controlling an individual's risk of aquiring Alzheimer's Disease (AD):
+Recent genetic studies of humans have identified brain specific myeloid cells (microglia) as a potential key cell type controlling an individual's risk of acquiring Alzheimer's Disease (AD):
 
 -   (Genetics of Alzheimer's disease: where we are, and where we are going, Bellenguez et al, 2020)[<https://www.sciencedirect.com/science/article/pii/S0959438819301357>]
 -   (Microglia in Alzheimer's disease, Hansen et al.,2018)[<https://rupress.org/jcb/article/217/2/459/52543/Microglia-in-Alzheimer-s-diseaseAlzheimer-s>]
 
-In this report, I will be performing a differential expression (DE) analysis of RNA-seq data that has been derived from both Alzheimer's patient and control individual Microglia. This data is assosciated with the publication: [Alzheimer's Patient Microglia Exhibit Enhanced Aging and Unique Transcriptional Activation](https://pubmed.ncbi.nlm.nih.gov/32610143/), of which the graphical abstract is below:
+In this report, I will be performing a differential expression (DE) analysis of RNA-seq data that has been derived from both Alzheimer's patient and control individual Microglia. This data is associated with the publication: [Alzheimer's Patient Microglia Exhibit Enhanced Aging and Unique Transcriptional Activation](https://pubmed.ncbi.nlm.nih.gov/32610143/), of which the graphical abstract is below:
 
 ![](images/paste-BBC9C395.png){width="402"}
 
-This study examined the expression of twenty-five genes known or proposed to be associated with AD risk or progression and found that most AD risk genes in their purified frozen brain tissue cell types showed preferential expression in microglia compared with other brain cell types. They have also examined whether any of these genes displayed altered expression levels in AD versus control cells, and observed that APOE, ABCA7, GPR141, PTK2B, SPI1, and ZYX appeared upregulated in AD microglia, whereas MEF2C appeared downregulated (un-adjusted p value \< 0.05). The indication of upregulation of APOE is specifically interesting, as previous studies have indicated to the potential importantance of the gene [APOE ε4: the most prevalent yet understudied risk factor for Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/25217293/).
+This study examined the expression of twenty-five genes known or proposed to be associated with AD risk or progression and found that most AD risk genes in their purified frozen brain tissue cell types showed preferential expression in microglia compared with other brain cell types. They have also examined whether any of these genes displayed altered expression levels in AD versus control cells, and observed that APOE, ABCA7, GPR141, PTK2B, SPI1, and ZYX appeared upregulated in AD microglia, whereas MEF2C appeared downregulated (un-adjusted p value \< 0.05). The indication of upregulation of APOE is specifically interesting, as previous studies have indicated to the potential importance of the gene [APOE ε4: the most prevalent yet understudied risk factor for Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/25217293/).
 
-My aim specifically is to recapitulate the author's results, confirming that the prior mentioned set of genes **is** indeed upgregulaed in AD patient microglia in comparison to controls. Throughout this analysis I intend to hold this data to high quality control standards in order to ensure the correctness of the analysis findings. In order for this report to be reproducible and easily understood, I will make use of the industry-standard splice-aware RNA-seq aligner `STAR`, and differential expression profiling tool `DESeq2`.
+My aim specifically is to recapitulate the author's results, confirming that the prior mentioned set (along with the total set of **56** identified differentially expressed genes) **is** indeed upregulated in AD patient microglia in comparison to controls. Throughout this analysis I intend to hold this data to high quality control standards in order to ensure the correctness of the analysis findings. In order for this report to be reproducible and easily understood, I will make use of the industry-standard splice-aware RNA-seq aligner `STAR`, and differential expression profiling tool `DESeq2`.
 
 # **Results**
 
@@ -135,11 +169,12 @@ My aim specifically is to recapitulate the author's results, confirming that the
 
 ## **Differentially Expressed Gene List**
 
-Of the **25** literature-selected genes identified in this study, I have confirmed **14** to be differentially expressed. A table containing the confirmed genes with their multiple-testing corrected p-value as well as log_2 fold change of expression can be found below. An extended list of genes found to be differntially expressed in this report can be found in the [Differential Expression Analysis](### differential-expression-analysis) section of this report.
+Of the **56** genes identified in my hypothesis, I was only able to confirm **14** gene as differentially expressed in my final results of this report. However, these genes are also a set of the **25** literature-supported genes identified in this study as well, raising my confidence in their true differential nature. A table containing the confirmed genes with their multiple-testing corrected p-value as well as log_2 fold change of expression can be found below. An extended list of genes found to be differentially expressed in this report can be found in the [Differential Expression Analysis](### differential-expression-analysis) section of this report.
 
 ```{r}
-kable(study_confirmed_genes_df)
+kable(study_de_genes_df)
 ```
+
 
 ## **Possible Future Experiments and Analyses**:
 
@@ -147,7 +182,7 @@ After performing this analysis, I have identified a few areas that could be impr
 
 The study in question offers **4** total bulk-sorted cell types, and in this report I have chosen to only analyze the **Myeloid** cell type. Thus, in the future it might be interesting to analyze the other cell type data (Astrocytes, Endothelial, Neurons). As well as analyzing more cell types, more background-literature genes of interest could be integrated into this analysis, in order to test for differential expression in this dataset.
 
-As well as possible further anaylsis with the dataset in hand, there is room for improvement in the quality of collected data as well. Due to the nature of this dataset being generated from frozen tissue, large amounts of long-non-coding RNAs and Mitochondrial RNAs were detected, causing the need for filtering by only protein-coding genes. This is obvioulsy not the ideal setting, so there is certainly room for improvement of analyzing fresher tissue datasets, or more well-preserved datasets. This is a challenge though as large, well annotated, fresh, human cohort data has not been practical to collect in the past. 
+As well as possible further analysis with the dataset in hand, there is room for improvement in the quality of collected data as well. Due to the nature of this dataset being generated from frozen tissue, large amounts of long-non-coding RNAs and Mitochondrial RNAs were detected, causing the need for filtering by only protein-coding genes. This is obviously not the ideal setting, so there is certainly room for improvement of analyzing fresher tissue datasets, or more well-preserved datasets. This is a challenge though as large, well annotated, fresh, human cohort data has not been practical to collect in the past. 
 
 # **Methods**
 
@@ -242,7 +277,7 @@ multiqc $fastqc_outdir
 
 Found later in this report, after observing the first application of `FastQC` to the raw FastQ data files, highly repeated sequences were found. In order to both detect and remove these sequences from the raw input FastQ data, we can use the [`TrimGalore`](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/). Also written an maintained by the Bioinformatics Group at the [Babraham Institute](http://www.babraham.ac.uk/).
 
-`TrimGalore` is a wrapper tool, providing the functionality of both `Cutadapt` and `FastQC` to provided adapter trimming and quality control to FastQ files. This report does not make use of the `FastQC` functionality of `TrimGalore` in order to seperate the QC and raw data files in an easier to understand way, calling `FastQC` directly with the required arguments.
+`TrimGalore` is a wrapper tool, providing the functionality of both `Cutadapt` and `FastQC` to provided adapter trimming and quality control to FastQ files. This report does not make use of the `FastQC` functionality of `TrimGalore` in order to separate the QC and raw data files in an easier to understand way, calling `FastQC` directly with the required arguments.
 
 **Key TrimGalore Commands**
 
@@ -256,7 +291,7 @@ $trim_galore $fastq_files \
 
 With over **16,787** citations on [Google Scholar](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C33&q=+STAR%3A+ultrafast+universal+RNA-seq+aligner+&btnG=), `STAR` (Spliced Transcripts Alignment to a Reference) has proven to be a great tool for RNA-seq alignment.
 
-It is best to first assemble a reference built upon your organism - gene model of interest with `STAR --runMode genomeGenerate`, followed by mapping your RNA-seq reads with `STAR --runMode alignReads`. Durning alignment, `STAR` takes as input single-end or pair-end fastq files, with the output file being in `SAM` (Spliced Alignment/Mapping) format. The `sam` file should then usually be converted into `BAM` (Binary Alignment/Mapping) file, a binary file of sam, for shortening computation time in further analyzing differential expression within RNA-seq data.
+It is best to first assemble a reference built upon your organism - gene model of interest with `STAR --runMode genomeGenerate`, followed by mapping your RNA-seq reads with `STAR --runMode alignReads`. During alignment, `STAR` takes as input single-end or pair-end fastq files, with the output file being in `SAM` (Spliced Alignment/Mapping) format. The `sam` file should then usually be converted into `BAM` (Binary Alignment/Mapping) file, a binary file of sam, for shortening computation time in further analyzing differential expression within RNA-seq data.
 
 **Key STAR Commands**:
 
@@ -443,7 +478,7 @@ Percentage of unmapped reads for SRR8440539: 12.34%
 Percentage of unmapped reads for SRR8440542: 8.16%
 ```
 
-From the above output, we see that `SRR8440463` as an unusually high amount of unmapped reads compared to all other samples in the study. When cross-referenceing our previously generated `MultiQC` report from earlier, we can see that the GC content of this sample appears to be off compared to all other samples as well, possibly indicating contamination or other library quality issues.
+From the above output, we see that `SRR8440463` as an unusually high amount of unmapped reads compared to all other samples in the study. When cross-referencing our previously generated `MultiQC` report from earlier, we can see that the GC content of this sample appears to be off compared to all other samples as well, possibly indicating contamination or other library quality issues.
 
 ![](images/paste-E644752B.png)
 
@@ -498,7 +533,7 @@ read_counts <- as.matrix(read_counts)
 
 **Filtering failed QC Samples**
 
-We will now filter the samples previously seen to have low-quality aspects that have the possiblity of adding unnecessary noise to our analyses. The samples  `SRR8440524`, `SRR8440538`, and `SRR8440539` will be removed due to cyclic gc-content findings,  `SRR8440463` will be removed due to GC-rich contamination, and finally `SRR8440447` and `SRR8440517` will be removed due to unkown sex of the sample (a possible confounder).
+We will now filter the samples previously seen to have low-quality aspects that have the possibility of adding unnecessary noise to our analyses. The samples  `SRR8440524`, `SRR8440538`, and `SRR8440539` will be removed due to cyclic gc-content findings,  `SRR8440463` will be removed due to GC-rich contamination, and finally `SRR8440447` and `SRR8440517` will be removed due to unknown sex of the sample (a possible confounder).
 
 ```{r}
 keep_samples <- 
@@ -520,9 +555,9 @@ read_counts %>%
 
 ### **Converting Gene symbols using GTF**
 
-Now that we have the `read_counts` for all of our samples of interest, we can associate our known metadata with the genes, which can later be incorported into our `DESeq2` object's `rowData`. In order to associate these data, the gene information can first be read in the `gencode.v36.annotation.gtf.gz` file with `plyranger::read_gff`. 
+Now that we have the `read_counts` for all of our samples of interest, we can associate our known metadata with the genes, which can later be incorporated into our `DESeq2` object's `rowData`. In order to associate these data, the gene information can first be read in the `gencode.v36.annotation.gtf.gz` file with `plyranger::read_gff`. 
 
-Seen later in this report, I will be filtering for only **protein-coding genes**, as well as **Non-Mitochondrial RNA** in order to achieve proper cross-sample normalization results. This result is acheived through filtering the `data.frame` derived from the GTF gene info file, followd by a `left_join` on the row names of our gene count information with the associated gene symbol.
+Seen later in this report, I will be filtering for only **protein-coding genes**, as well as **Non-Mitochondrial RNA** in order to achieve proper cross-sample normalization results. This result is achieved through filtering the `data.frame` derived from the GTF gene info file, followed by a `left_join` on the row names of our gene count information with the associated gene symbol.
 
 ```{r}
 genes_df <- 
@@ -623,7 +658,7 @@ DESeq.ds %>%
 
 **Number of reads sequenced per sample**
 
-In order to determine useful characteristics about our sample read mappings to inform proper normalization, we can begin by inspecting how many reads we have aquired per sample.
+In order to determine useful characteristics about our sample read mappings to inform proper normalization, we can begin by inspecting how many reads we have acquired per sample.
 
 ```{r}
 colSums(counts(DESeq.ds)) %>% 
@@ -781,7 +816,7 @@ plot(sizeFactors(DESeq.ds), colSums(counts(DESeq.ds)),
 
 **Normalizing Read Counts with Size Factors**
 
-In the previous step, we have calculated the `sizeFactors` of our samples, and confirmed that the results match required expectaions. Now we can use this result in order to properly normalize our samples. This is accomplished with the `DESeq2::counts()` accessor, with added paramter `normalized = TRUE`. Below we compare the filtered but non-normalized RNA read counts, with the filtered and normalized read counts.
+In the previous step, we have calculated the `sizeFactors` of our samples, and confirmed that the results match required expectations. Now we can use this result in order to properly normalize our samples. This is accomplished with the `DESeq2::counts()` accessor, with added parameter `normalized = TRUE`. Below we compare the filtered but non-normalized RNA read counts, with the filtered and normalized read counts.
 
 ```{r, fig.width = 10}
 p1 <-
@@ -816,7 +851,7 @@ p2 <-
 p1 + p2
 ```
 
-I would again like to show how the result of this normalization procedure has influenced the gene-filtering I have applied in previous step of the report. Below I show the results of the same normalization procedure as above, however with no gene filtering, Mitochondrial RNA filtering, and non-protein coding and Mitochondrial RNA filtering respectived.
+I would again like to show how the result of this normalization procedure has influenced the gene-filtering I have applied in previous step of the report. Below I show the results of the same normalization procedure as above, however with no gene filtering, Mitochondrial RNA filtering, and non-protein coding and Mitochondrial RNA filtering respectively.
 
 **No Gene Filtering Applied**
 
@@ -892,11 +927,11 @@ p1 + p2
 
 ### **Exploratory Data Analysis**
 
-In order to briefly explore possible relationships and patterns in our data, such as confounding variables or strength of seperation between `Diagnosis`, we will apply `DESeq2::rlog` to the **raw count data**. The `rlog` function transforms the count data to the log2 scale, while also minimizing differences between samples for rows with small counts, and even normalizing with respect to library size ontop of that.
+In order to briefly explore possible relationships and patterns in our data, such as confounding variables or strength of separation between `Diagnosis`, we will apply `DESeq2::rlog` to the **raw count data**. The `rlog` function transforms the count data to the log2 scale, while also minimizing differences between samples for rows with small counts, and even normalizing with respect to library size ontop of that.
 
-Note that in the previous section, we observed the `sizeFactors()`, resulting from **size factor normalization** that will be used for the **differential expression analysis**, however `rlog` normalized data will be used stricty for **exploratory data analysis** in this section of the report, before we return to the `DESeq2` driven differential expression analysis in the next sections.
+Note that in the previous section, we observed the `sizeFactors()`, resulting from **size factor normalization** that will be used for the **differential expression analysis**, however `rlog` normalized data will be used strictly for **exploratory data analysis** in this section of the report, before we return to the `DESeq2` driven differential expression analysis in the next sections.
 
-Below we apply `DESeq2::rlog()` to the filtered `DESeq2` object that we have created previously, and plot the normaliztion results for matched gene-expression between two pairs of matched samples of which had an observable difference in raw read count numbers.
+Below we apply `DESeq2::rlog()` to the filtered `DESeq2` object that we have created previously, and plot the normalization results for matched gene-expression between two pairs of matched samples of which had an observable difference in raw read count numbers.
 
 ```{r, fig.width = 10, fig.height = 4.5}
 DESeq.rlog <- rlog(DESeq.ds, blind = TRUE)
@@ -1002,7 +1037,7 @@ We first note that the [original publication](https://pubmed.ncbi.nlm.nih.gov/32
 > <font size=2.5> To maximize the likelihood of observing differences between AD and control, we selectedonly AD specimens with high scores for amyloid and tau neuro-pathology in frontal cortex, and we selected only control specimens with negligible amounts of these pathologies in this region (see sample metadata in Data S2). AD and control groups had roughly matching distributions of age, sex, and post-mortem interval (PMI). <font>
 
 
-**P**ost-**M**ortem-**I**nterval, being the time since death that the sample was processed was not found in the original publication to be required to be modelled as a covariate between AD and Control samples, however for peace of mind we also see that PMI is fairly evenly distributed between the two groups.
+**P**ost-**M**ortem-**I**nterval, being the time since death that the sample was processed was not found in the original publication to be required to be modeled as a covariate between AD and Control samples, however for peace of mind we also see that PMI is fairly evenly distributed between the two groups.
 
 ```{r, fig.height=2.5}
 accession_table %>% 
@@ -1015,7 +1050,7 @@ accession_table %>%
 
 ### **APOE as a Possible Confounder**
 
-We note that **APOE genotype** may play a role in AD, though are not including it in the analysis in order to compare with the reference study ([APOE ε4: the most prevalent yet understudied risk factor for Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/25217293/)). Note that it was also better to not include APOE as `DESeq2` will have a problem processing the variable in the design formula as not every level is repsented in every group, observed below.
+We note that **APOE genotype** may play a role in AD, though are not including it in the analysis in order to compare with the reference study ([APOE ε4: the most prevalent yet understudied risk factor for Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/25217293/)). Note that it was also better to not include APOE as `DESeq2` will have a problem processing the variable in the design formula as not every level is represented in every group, observed below.
 
 ```{r, fig.height = 2.5}
 accession_table %>% 
@@ -1148,19 +1183,19 @@ selected_genes_rlog_corr_coeff %>%
        xlab = "",  ylab = "", sub = "")
 ```
 
-**Study-Selected, Literature Supported Specific Gene-Set**
+**Literature Supported Specific Gene-Set**
 
-From the results above, it is unclear if our groups seperate by sex. In order to further determine if we should observe any differentially expressed genes between the sexes, we will only select gene features that were pointed out as literature supported in the reference study. This list is printed below as well for convenience
+From the results above, it is unclear if our groups separate by sex. In order to further determine if we should observe any differentially expressed genes between the sexes, we will only select gene features that were pointed out as literature supported in the reference study. This list is printed below as well for convenience
 
 ```{r}
-study_selected_genes
+literature_supported_genes
 ```
 
-Below we see that given the literature-supported genes, our Male and Female sex groups do seem to be seem to be the main source of seperation in our data, though some patterns may exist. Moving forward the difference in sex of our cohort should not ruin our differential expression analysis between Control and AD groups, though it may be bet to model as a confounding factor as I have in this report.
+Below we see that given the literature-supported genes, our Male and Female sex groups do seem to be seem to be the main source of separation in our data, though some patterns may exist. Moving forward the difference in sex of our cohort should not ruin our differential expression analysis between Control and AD groups, though it may be bet to model as a confounding factor as I have in this report.
 
 ```{r, echo = FALSE, fig.height=5}
 study_selected_gencode_ids <- 
-  data.frame(gene_id = study_selected_genes) %>% 
+  data.frame(gene_id = literature_supported_genes) %>% 
   left_join(gene_info_df, by = c('gene_id' = 'gene_name')) %>% 
   drop_na() %>% .$gencode_id
   
@@ -1211,7 +1246,7 @@ DESeq.rlog %>%
 
 **AD vs Control Correlation Heatmap**
 
-We can now generate the same Pearson correlation heatmap from above, though this time seperating by our true varible of interest: AD vs Control.
+We can now generate the same Pearson correlation heatmap from above, though this time separating by our true variable of interest: AD vs Control.
 
 column 1: all genes column 2: selected genes row 1: heatmap row 2: pca
 
@@ -1294,20 +1329,20 @@ selected_genes_rlog_corr_coeff %>%
        xlab = "",  ylab = "", sub = "")
 ```
 
-**Study-Selected, Literature Supported Specific Gene-Set**
+**Literature Supported Specific Gene-Set**
 
-From the results above, it is unclear if our groups are seperable at all. In order to further determine if we should observe any differentially expressed genes, we will only select gene features that were pointed out as literature supported in the reference study. This list is printed below as well for convenience
+From the results above, it is unclear if our groups are separable at all. In order to further determine if we should observe any differentially expressed genes, we will only select gene features that were pointed out as literature supported in the reference study. This list is printed below as well for convenience
 
 ```{r}
-study_selected_genes
+literature_supported_genes
 ```
 
-Below we see that given the literature-supported genes, our Control and AD groups do seem to be seperable, and group well by Diagnosis condition. This indicates that we probably should see some differentially expressed genes in the next section.
+Below we see that given the literature-supported genes, our Control and AD groups do seem to be separable, and group well by Diagnosis condition. This indicates that we probably should see some differentially expressed genes in the next section.
 
 
 ```{r, echo = FALSE, fig.height = 4.5}
 study_selected_gencode_ids <- 
-  data.frame(gene_id = study_selected_genes) %>% 
+  data.frame(gene_id = literature_supported_genes) %>% 
   left_join(gene_info_df, by = c('gene_id' = 'gene_name')) %>% 
   drop_na() %>% .$gencode_id
   
@@ -1357,7 +1392,7 @@ DESeq.rlog %>%
 
 ## **Differential Expression Analysis**
 
-We will now continue with the differential expression analysis that we have already begun by esimtating our size factors. To remind the reader, the steps we must take to successfully complete a `DESeq2` differential expression analysis are the following: 
+We will now continue with the differential expression analysis that we have already begun by estimating our size factors. To remind the reader, the steps we must take to successfully complete a `DESeq2` differential expression analysis are the following: 
 
 1. Estimation of the size factors with `DESeq2::estimateSizeFactors()`
 2. Estimation of the dispersion with `DESeq2::esimateDispersions()`
@@ -1367,7 +1402,7 @@ During this analysis, [this tutorial](https://dputhier.github.io/jgb71e-polytech
 
 ### **Estimating Dispersion**
 
-As previously noted, the next step in performing our differential expression analysis on our read count set is to **estimate the gene-wise dispersion**, which represent the variance in gene expression for a given mean expression value. Note that this means information is shared accross genes of similar expression values in this step, as `DESeq2` is making the assumption that **genes with similar expression levels have similar dispersion**. Also note that the process executed below (`estimateDispersions()`) is an instance of Maximum Likelihood esimation of dispersion to the count data. The result that we see plotted below is a **red curve**, indicating the expected dispersion value for genes of a given expression strength. Each black dot bvelow is a gene with an associated man expression level and MLE of the dispersion.
+As previously noted, the next step in performing our differential expression analysis on our read count set is to **estimate the gene-wise dispersion**, which represent the variance in gene expression for a given mean expression value. Note that this means information is shared across genes of similar expression values in this step, as `DESeq2` is making the assumption that **genes with similar expression levels have similar dispersion**. Also note that the process executed below (`estimateDispersions()`) is an instance of Maximum Likelihood estimation of dispersion to the count data. The result that we see plotted below is a **red curve**, indicating the expected dispersion value for genes of a given expression strength. Each black dot below is a gene with an associated man expression level and MLE of the dispersion.
 
 ```{r}
 DESeq.ds <- estimateDispersions(DESeq.ds)
@@ -1378,7 +1413,7 @@ From the plot we see above, our gene-dispersion model seems to be a good fit, an
 
 ### **Negative Binomial Wald Test**
 
-We are now ready to actually peform the differential expression test. Below we apply the `nbinomWaldTest` to test the coefficients of a fit Negative Binomial GLM model against a normal distribution centered around 0. 
+We are now ready to actually perform the differential expression test. Below we apply the `nbinomWaldTest` to test the coefficients of a fit Negative Binomial GLM model against a normal distribution centered around 0. 
 
 ```{r, results='hide'}
 DESeq.ds <- nbinomWaldTest(DESeq.ds)
@@ -1389,7 +1424,7 @@ resultDESeq2 <-
           alpha = 0.05)
 ```
 
-**Distriubtion of Resultant P-values**
+**Distribution of Resultant P-values**
 
 ```{r, fig.width=10, echo = FALSE}
 p1 <- resultDESeq2 %>% 
@@ -1452,12 +1487,42 @@ DGEgenes <- diff_exp_df %>%
 ```
 
 
-**Where do the study-selected genes fall in our differential expression table?**
+**Where do the study-shown differentially expressed genes fall in our differential expression table?**
+
+```{r}
+diff_exp_df %>%
+  filter(gene_name %in% study_de_genes) %>% 
+  # picking top-pvalue ensmbl-gene for each
+  # hgnc gene-symbol identified gene
+  group_by(gene_name) %>% 
+  arrange(pvalue) %>% 
+  filter(row_number() == 1) %>% 
+  ungroup() %>%
+  as.data.frame() %>% 
+  set_rownames(.$gene_name) %>% 
+  arrange(padj) %>% 
+  select(padj, log2FoldChange) %>% 
+  mutate(padj = format(padj, digits = 2, scientific = FALSE), 
+         log2FoldChange = format(log2FoldChange, digits = 3)) %>%
+  kable()
+```
+
+
+**Which genes have we confirmed from the study-selected genes to be differentially expressed?**
+
+```{r, echo = FALSE}
+diff_exp_df %>% 
+  filter(gene_name %in% literature_supported_genes, 
+         padj < 0.05) %>%
+  .$gene_name %>% unname()
+```
+
+
+**Where do the literature-supported genes fall in our differential expression table?**
 
 ```{r, echo = FALSE}
 diff_exp_df %>%
-  filter(gene_name %in% study_selected_genes,
-         padj < 0.05) %>% 
+  filter(gene_name %in% literature_supported_genes) %>% 
   # picking top-pvalue ensmbl-gene for each
   # hgnc gene-symbol identified gene
   group_by(gene_name) %>% 
@@ -1471,15 +1536,6 @@ diff_exp_df %>%
   mutate(padj = format(padj, digits = 2, scientific = FALSE), 
          log2FoldChange = format(log2FoldChange, digits = 3)) %>% 
   kable()
-```
-
-**Which genes have we confirmed from the study-selected genes to be differentially expressed?**
-
-```{r, echo = FALSE}
-diff_exp_df %>% 
-  filter(gene_name %in% study_selected_genes, 
-         padj < 0.05) %>%
-  .$gene_name %>% unname()
 ```
 
 
@@ -1658,7 +1714,7 @@ In this report, I have confirmed differential expression of **14** of **25** lit
 
 ## **Issues, Problems and Limitations**
 
-While analyzing this dataset, a key issue I have found is that it was sourced from frozen-tissue, causing degredation of some cell-resident RNA, and an overall enrichment in the samples for harder-to-degrade RNA like long-non-coding RNAs (lncRNAs) and Mitchondrial RNAs. In order to still provide confident results in the genes I have identified as differentially expressed, I have **filtered for only non-Mitochondrial protein-coding genes**. This solved many of the read count normalization hurdles, however limited the scope of my analysis and findings as well.
+While analyzing this dataset, a key issue I have found is that it was sourced from frozen-tissue, causing degradation of some cell-resident RNA, and an overall enrichment in the samples for harder-to-degrade RNA like long-non-coding RNAs (lncRNAs) and Mitchondrial RNAs. In order to still provide confident results in the genes I have identified as differentially expressed, I have **filtered for only non-Mitochondrial protein-coding genes**. This solved many of the read count normalization hurdles, however limited the scope of my analysis and findings as well.
 
 
 ## **Key Datasets Generated**
