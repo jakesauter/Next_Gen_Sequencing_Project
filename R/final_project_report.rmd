@@ -907,7 +907,7 @@ Note that in the previous section, we observed the `sizeFactors()`, resulting fr
 
 Below we apply `DESeq2::rlog()` to the filtered `DESeq2` object that we have created previously, and plot the normaliztion results for matched gene-expression between two pairs of matched samples of which had an observable difference in raw read count numbers.
 
-```{r, fig.width = 10, fig.height = 5}
+```{r, fig.width = 10, fig.height = 4.5}
 DESeq.rlog <- rlog(DESeq.ds, blind = TRUE)
 
 log.norm.counts <-
@@ -1314,7 +1314,7 @@ study_selected_genes
 Below we see that given the literature-supported genes, our Control and AD groups do seem to be seperable, and group well by Diagnosis condition. This indicates that we probably should see some differentially expressed genes in the next section.
 
 
-```{r, echo = FALSE, fig.height = 5}
+```{r, echo = FALSE, fig.height = 4.5}
 study_selected_gencode_ids <- 
   data.frame(gene_id = study_selected_genes) %>% 
   left_join(gene_info_df, by = c('gene_id' = 'gene_name')) %>% 
@@ -1378,19 +1378,12 @@ During this analysis, [this tutorial](https://dputhier.github.io/jgb71e-polytech
 
 As previously noted, the next step in performing our differential expression analysis on our read count set is to **estimate the gene-wise dispersion**, which represent the variance in gene expression for a given mean expression value. Note that this means information is shared accross genes of similar expression values in this step, as `DESeq2` is making the assumption that **genes with similar expression levels have similar dispersion**. Also note that the process executed below (`estimateDispersions()`) is an instance of Maximum Likelihood esimation of dispersion to the count data. The result that we see plotted below is a **red curve**, indicating the expected dispersion value for genes of a given expression strength. Each black dot bvelow is a gene with an associated man expression level and MLE of the dispersion.
 
-<!-- **Shrinking Dispersion** -->
-
-<!-- We next must shrink the gene-wise dispersion estimates towards our expected dispersion values fitted by the red line in the previous step. This is required as values closer to the curve allow for more accurate identification of differentially expressed genes when samples sizes are small. This step is particularly helpful for **removing false positives** in our differential expression analysis. A key aspect of this fitting / normalization process is that most genes are shrunken towards the curve, though **extremely high dispersion values are not shrunken towards the curve**, due to the likelihood that the observed dispersion does not follow the modelling assumptions and has the observed higher variability due to other biological or technical reasons. The gene values that have not been shrunken towards the curve to avoid false-positives are **circled in blue**.  -->
-
-
 ```{r}
 DESeq.ds <- estimateDispersions(DESeq.ds)
 plotDispEsts(DESeq.ds)
 ```
 
-
 From the plot we see above, our gene-dispersion model seems to be a good fit, and we can continue on with differential expression analysis.
-
 
 ### **Negative Binomial Wald Test**
 
@@ -1458,6 +1451,15 @@ diff_exp_df %>%
          log2FoldChange = format(log2FoldChange, digits = 3)) %>% 
   kable()
 ```
+
+```{r, echo = FALSE}
+DGEgenes <- diff_exp_df %>% 
+  filter(padj < 0.05) %>% 
+  set_rownames(.$gene_name) %>% 
+  select(padj, log2FoldChange) %>% 
+  arrange(padj) %>% .$gene_name
+```
+
 
 **Where do the study-selected genes fall in our differential expression table?**
 
@@ -1540,7 +1542,123 @@ if (length(labels) > 0) {
 ```
 
 
+### **Gene Ontology of Differentiallty Expressed Genes** 
+
+```{r}
+# BiocManger::install('goseq')
+library(goseq)
+
+gene.vector <- 
+  (row.names(resultDESeq2) %in% DGEgenes) %>%
+  as.integer()
+
+names(gene.vector) <- row.names(resultDESeq2)
+
+names(gene.vector) <-
+      gsub('\\.[0-9]+$', '', names(gene.vector))
+
+pwf <- nullp(gene.vector,'hg19','ensGene', 
+             plot.fit = FALSE)
+
+# BiocManager::install('org.Hs.eg.db')
+GO.wall <- goseq(pwf,'hg19','ensGene')
+
+sig_GOs <- 
+  subset(GO.wall, 
+         over_represented_pvalue < 0.01) 
+
+write.table(
+  sig_GOs[,c("category","over_represented_pvalue")],
+  file = "Enriched_GOterms_goseq.txt",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+```{r, echo = FALSE}
+
+library(treemap) 								# treemap package by Martijn Tennekes
+
+# Set the working directory if necessary
+# setwd("C:/Users/username/workingdir");
+
+# --------------------------------------------------------------------------
+# Here is your data from REVIGO. Scroll down for plot configuration options.
+
+revigo.names <- c("term_ID","description","freqInDbPercent","value","uniqueness","dispensability","representative");
+revigo.data <- rbind(c("GO:0017113","dihydropyrimidine dehydrogenase (NADP+) activity",0.006,2.789,0.871,0.000,"dihydropyrimidine dehydrogenase (NADP+) activity"),
+c("GO:0052851","ferric-chelate reductase (NADPH) activity",0.017,2.198,0.780,0.328,"dihydropyrimidine dehydrogenase (NADP+) activity"),
+c("GO:0038048","dynorphin receptor activity",0.006,2.492,0.998,0.000,"dynorphin receptor activity"),
+c("GO:0046911","metal chelating activity",0.006,2.920,0.999,0.000,"metal chelating activity"),
+c("GO:0002058","uracil binding",0.011,2.466,0.773,0.001,"uracil binding"),
+c("GO:0050661","NADP binding",0.293,2.258,0.875,0.230,"uracil binding"),
+c("GO:0002054","nucleobase binding",0.028,2.088,0.886,0.245,"uracil binding"),
+c("GO:0050682","AF-2 domain binding",0.017,2.120,0.999,0.001,"AF-2 domain binding"),
+c("GO:0060228","phosphatidylcholine-sterol O-acyltransferase activator activity",0.033,2.143,0.998,0.012,"phosphatidylcholine-sterol O-acyltransferase activator activity"),
+c("GO:0004098","cerebroside-sulfatase activity",0.006,2.773,0.956,0.079,"cerebroside-sulfatase activity"));
+
+stuff <- data.frame(revigo.data);
+names(stuff) <- revigo.names;
+
+stuff$value <- as.numeric( as.character(stuff$value) );
+stuff$freqInDbPercent <- as.numeric( as.character(stuff$freqInDbPercent) );
+stuff$uniqueness <- as.numeric( as.character(stuff$uniqueness) );
+stuff$dispensability <- as.numeric( as.character(stuff$dispensability) );
+
+# by default, outputs to a PDF file
+# pdf( file="revigo_treemap.pdf", width=16, height=9 ) # width and height are in inches
+
+# check the tmPlot command documentation for all possible parameters - there are a lot more
+treemap(
+  stuff,
+  index = c("representative","description"),
+  vSize = "value",
+  type = "categorical",
+  vColor = "representative",
+  title = "REVIGO TreeMap",
+  inflate.labels = FALSE,      # set this to TRUE for space-filling group labels - good for posters
+  lowerbound.cex.labels = 0,   # try to draw as many labels as possible (still, some small squares may not get a label)
+  fontsize.labels = c(0, 12),  # don't draw main group names as they are redundant
+  bg.labels = "#CCCCCCAA",   # define background color of group labels
+								 # "#CCCCCC00" is fully transparent, "#CCCCCCAA" is semi-transparent grey, NA is opaque
+  # bg.labels = 0,
+  position.legend = "none"
+)
+```
+
+
 # **Discussion**
+
+## **Interesting Identified Genes**
+
+**APOE** (apolipoprotein E) -- Involved in the metabolism of fats in the body of mammals. A subtype is implicated in Alzheimer's disease and cardiovascular disease.
+
+**PSTPIP1** (proline-serine-threonine phosphatase interacting protein 1) --  found in association with the cytoskeleton in myeloid/monocytic cells and modulates immunoregulatory functions
+
+**ASTN1** (astrotactin 1) -- Neuronal adhesion molecule required for glial-guided migration of young postmitotic neuroblasts in cortical regions of developing brain, including cerebrum, hippocampus, cerebellum, and olfactory bulb
+
+**TGFBI** (transforming growth factor beta induced ) --  The protein is induced by transforming growth factor-beta and acts to inhibit cell adhesion. Mutations in this gene are associated with multiple types of corneal dystrophy
+
+**SERPINF1** (serpin family F member 1) --  The encoded protein is secreted and strongly inhibits angiogenesis. In addition, this protein is a neurotrophic factor involved in neuronal differentiation in retinoblastoma cells. Mutations in this gene were found in individuals with osteogenesis imperfecta
+
+**STEAP3** (STEAP3 metalloreductase) --  This protein may mediate downstream responses to p53, including promoting apoptosis. Deficiency in this gene can cause anemia.
+
+**S100A4** ( S100 calcium binding protein A4) --  S100 proteins are localized in the cytoplasm and/or nucleus of a wide range of cells, and involved in the regulation of a number of cellular processes such as cell cycle progression and differentiation
+
+**DPYD** (dihydropyrimidine dehydrogenase) -- Initial and rate-limiting factor in the pathway of uracil and thymidine catabolism
+
+**PTPRG** (protein tyrosine phosphatase receptor type G) --  known to be signaling molecules that regulate a variety of cellular processes including cell growth, differentiation, mitotic cycle, and oncogenic transformation. 
+
+**CECR2** (CECR2 histone acetyl-lysine reader) --  involved in  chromatin remodeling, and may additionally play a role in DNA damage response. The encoded protein functions as part of an ATP-dependent complex that is involved in neurulation
+
+**ARSA** (arylsulfatase A) -- Defects in this gene lead to metachromatic leucodystrophy (MLD), a progressive demyelination disease which results in a variety of neurological symptoms and ultimately death
+
+
+
+**MOV10L1** (Mov10 like RISC complex RNA helicase 1) 
+
+
+
+**GLT1D1** (glycosyltransferase 1 domain containing 1) 
 
 ## **Issues, Problems and Limitations**
 
