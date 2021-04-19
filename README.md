@@ -1,12 +1,20 @@
 ## **NGS RNA-Seq Project**
-**Progress Report: Finish Aligning and Generate Read Counts**
 
 A report by: **Jake Sauter**
 
 date: 3/19/2021
 
-Please see HMTL Report here: [https://jakesauter.github.io/Next_Gen_Sequencing_Project/](https://jakesauter.github.io/Next_Gen_Sequencing_Project/)
+### **HTML Report Location**
 
-ADD Volcano plot, final table to README.
+Please see HMTL Report here: <https://jakesauter.github.io/Next_Gen_Sequencing_Project/>
 
-File Structure: 
+### **Sample Figures**
+
+Graphical Abstract of [Alzheimer's Patient Microglia Exhibit Enhanced Aging and Unique Transcriptional Activation](https://pubmed.ncbi.nlm.nih.gov/32610143/):
+
+<img src="R/images/paste-BBC9C395.png" width="384"/>
+
+<img src="R/images/final_volcano_plot.png"/>
+
+<img src="R/images/final_treemap.png"/>
+
