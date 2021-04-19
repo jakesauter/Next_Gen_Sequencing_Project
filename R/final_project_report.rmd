@@ -533,7 +533,7 @@ read_counts <- as.matrix(read_counts)
 
 **Filtering failed QC Samples**
 
-We will now filter the samples previously seen to have low-quality aspects that have the possibility of adding unnecessary noise to our analyses. The samples  `SRR8440524`, `SRR8440538`, and `SRR8440539` will be removed due to cyclic gc-content findings,  `SRR8440463` will be removed due to GC-rich contamination, and finally `SRR8440447` and `SRR8440517` will be removed due to unknown sex of the sample (a possible confounder).
+We will now filter the samples previously seen to have low-quality aspects that have the possibility of adding unnecessary noise to our analyses. The samples  `SRR8440524`, `SRR8440538`, and `SRR8440539` will be removed due to cyclic gc-content findings,  `SRR8440463` will be removed due to GC-rich contamination, and finally `SRR8440447`, `SRR8440517`, `SRR8440484`, and`SRR8440488` will be removed due to unknown sex of the sample (a possible confounder).
 
 ```{r}
 keep_samples <- 
